@@ -8,7 +8,7 @@ class Country{
     team;
 }
 var heldUnits;
-function convertWindowCoordsToCanvas(c, x, y) {
+function convertWindowCoordsToCanvas(c:HTMLCanvasElement, x:number, y:number) {
     var bbox = c.getBoundingClientRect();
     return {
         x: x - bbox.left * (c.width / bbox.width),
