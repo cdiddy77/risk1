@@ -119,4 +119,21 @@ class Polyline {
         }
        
     }
+
+    	isPointInside(testPoint:Point):boolean
+		{
+			let i:number;
+            let j:number;
+			let c:boolean = false;
+			for (i = 0, j = this.pts.length - 1; i < this.pts.length; j = i++)
+			{
+				if (((this.pts[i].y > testPoint.y) != (this.pts[j].y > testPoint.y)) 
+				&& (testPoint.x < (this.pts[j].x - this.pts[i].x) * (testPoint.y - this.pts[i].y) / (this.pts[j].y - this.pts[i].y) + this.pts[i].x))
+				{
+					c = !c;
+				}
+			}
+
+			return c;
+		}
 }

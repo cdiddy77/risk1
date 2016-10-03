@@ -7,6 +7,7 @@ class Model {
     allRegions: Region[] = [];
     activeDrawRegion: Polyline = null;
     currentMousePoint: Point = null;
+    hoverRegion: Region = null;
 }
 
 class Region {
@@ -64,15 +65,23 @@ $(() => {
         model.allRegions = [];
         queueRedraw();
     });
-    
+
     $('#dumpAllRegionsButton').click(function (ev) {
         console.log(JSON.stringify(model.allRegions));
     });
-    
+
 });
 
-function doHittest(pt:Point){
-
+function doHittest(pt: Point) {
+    let originalHoverRegion = model.hoverRegion;
+    model.hoverRegion=null;
+    for (let i = 0; i < model.allRegions.length; i++) {
+        if (model.allRegions[i].coords.isPointInside(pt)) {
+            model.hoverRegion = model.allRegions[i];
+        }
+    }
+    if (model.hoverRegion != originalHoverRegion)
+        queueRedraw();
 }
 
 function queueRedraw(): void {
@@ -110,7 +119,15 @@ function drawModel(time?: number): void {
 function drawRegion(ctx: CanvasRenderingContext2D, r: Region) {
     ctx.strokeStyle = 'red';
     context.lineWidth = 3;
+    if (r == model.hoverRegion) {
+        context.fillStyle = 'red';
+    }
     r.coords.draw(ctx);
+    if (r == model.hoverRegion) {
+        context.globalAlpha = 0.3;
+        context.fill();
+        context.globalAlpha=1;
+    }
     ctx.stroke();
 }
 

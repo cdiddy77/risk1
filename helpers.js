@@ -102,6 +102,18 @@ var Polyline = (function () {
             ctx.lineTo(this.pts[i].x, this.pts[i].y);
         }
     };
+    Polyline.prototype.isPointInside = function (testPoint) {
+        var i;
+        var j;
+        var c = false;
+        for (i = 0, j = this.pts.length - 1; i < this.pts.length; j = i++) {
+            if (((this.pts[i].y > testPoint.y) != (this.pts[j].y > testPoint.y))
+                && (testPoint.x < (this.pts[j].x - this.pts[i].x) * (testPoint.y - this.pts[i].y) / (this.pts[j].y - this.pts[i].y) + this.pts[i].x)) {
+                c = !c;
+            }
+        }
+        return c;
+    };
     return Polyline;
 }());
 //# sourceMappingURL=helpers.js.map

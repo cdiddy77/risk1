@@ -7,6 +7,7 @@ var Model = (function () {
         this.allRegions = [];
         this.activeDrawRegion = null;
         this.currentMousePoint = null;
+        this.hoverRegion = null;
     }
     return Model;
 }());
@@ -67,6 +68,15 @@ $(function () {
     });
 });
 function doHittest(pt) {
+    var originalHoverRegion = model.hoverRegion;
+    model.hoverRegion = null;
+    for (var i = 0; i < model.allRegions.length; i++) {
+        if (model.allRegions[i].coords.isPointInside(pt)) {
+            model.hoverRegion = model.allRegions[i];
+        }
+    }
+    if (model.hoverRegion != originalHoverRegion)
+        queueRedraw();
 }
 function queueRedraw() {
     window.requestAnimationFrame(function (time) {
@@ -99,7 +109,15 @@ function drawModel(time) {
 function drawRegion(ctx, r) {
     ctx.strokeStyle = 'red';
     context.lineWidth = 3;
+    if (r == model.hoverRegion) {
+        context.fillStyle = 'red';
+    }
     r.coords.draw(ctx);
+    if (r == model.hoverRegion) {
+        context.globalAlpha = 0.3;
+        context.fill();
+        context.globalAlpha = 1;
+    }
     ctx.stroke();
 }
 function convertCoords(c, x, y) {
