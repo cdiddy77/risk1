@@ -1,76 +1,87 @@
 /// <reference path="./node_modules/@types/jquery/index.d.ts" />
-var canvas = document.getElementById('canvas');
-var context = canvas.getContext('2d');
-var img;
-var Model = (function () {
-    function Model() {
-        this.allRegions = [];
-        this.activeDrawRegion = null;
-        this.currentMousePoint = null;
-        this.hoverRegion = null;
-    }
-    return Model;
-}());
-var Region = (function () {
-    function Region(p, n) {
+var canvas: HTMLCanvasElement = <HTMLCanvasElement>document.getElementById('canvas');
+var context: CanvasRenderingContext2D = canvas.getContext('2d');
+var img: HTMLImageElement;
+
+class Model {
+    allRegions: Region[] = [];
+    activeDrawRegion: Polyline = null;
+    currentMousePoint: Point = null;
+    hoverRegion: Region = null;
+}
+
+class Region {
+    constructor(p: Polyline, n: string) {
         this.coords = p;
         this.name = n;
     }
-    return Region;
-}());
-var model = new Model();
-$(function () {
+    coords: Polyline;
+    name: string;
+    unitCoords: Point;
+}
+
+var model: Model = new Model();
+
+$(() => {
     console.log('we were here');
-    img = document.getElementById('riskmap');
+    img = <HTMLImageElement>document.getElementById('riskmap');
     context.font = "bold 16px Arial";
     context.fillText('loading...', canvas.width / 2, canvas.height / 2);
-    setTimeout(function () {
+    setTimeout(() => {
         queueRedraw();
     }, 1000);
-    canvas.onmousedown = function (ev) {
+
+    canvas.onmousedown = function (ev: MouseEvent) {
         console.log('onmousedown');
-        if (model.activeDrawRegion == null) {
+        if (model.activeDrawRegion == null && model.hoverRegion == null) {
             model.activeDrawRegion = new Polyline();
         }
         var pt = Point.parse(ev);
+        if (model.hoverRegion != null) {
+            model.hoverRegion.unitCoords = pt;
+        }
         // if the point is really close to the start of the polyline, 
         // then we will just close the polyline
-        if (model.activeDrawRegion.pts.length > 0
-            && Vector.fromPoints(model.activeDrawRegion.pts[0], pt).magnitude < 4) {
-            model.activeDrawRegion.addPoint(model.activeDrawRegion.pts[0]);
-            model.allRegions.push(new Region(model.activeDrawRegion, 'unnamed-region'));
-            model.activeDrawRegion = null;
-            model.currentMousePoint = null;
-        }
-        else {
-            model.activeDrawRegion.addPoint(pt);
+        if (model.activeDrawRegion != null) {
+            if (model.activeDrawRegion.pts.length > 0
+                && Vector.fromPoints(model.activeDrawRegion.pts[0], pt).magnitude < 10) {
+                model.activeDrawRegion.addPoint(model.activeDrawRegion.pts[0]);
+                model.allRegions.push(new Region(model.activeDrawRegion, 'unnamed-region'));
+                model.activeDrawRegion = null;
+                model.currentMousePoint = null;
+            } else {
+                model.activeDrawRegion.addPoint(pt);
+            }
         }
         queueRedraw();
     };
-    canvas.onmousemove = function (ev) {
+    canvas.onmousemove = function (ev: MouseEvent) {
         var pt = Point.parse(ev);
         if (model.activeDrawRegion != null) {
             model.currentMousePoint = pt;
             queueRedraw();
-        }
-        else {
+        } else {
             doHittest(pt);
         }
     };
+
     $('#clearAllButton').click(function (ev) {
         model.activeDrawRegion = null;
         model.currentMousePoint = null;
         model.allRegions = [];
         queueRedraw();
     });
+
     $('#dumpAllRegionsButton').click(function (ev) {
         console.log(JSON.stringify(model.allRegions));
     });
+
 });
-function doHittest(pt) {
-    var originalHoverRegion = model.hoverRegion;
+
+function doHittest(pt: Point) {
+    let originalHoverRegion = model.hoverRegion;
     model.hoverRegion = null;
-    for (var i = 0; i < model.allRegions.length; i++) {
+    for (let i = 0; i < model.allRegions.length; i++) {
         if (model.allRegions[i].coords.isPointInside(pt)) {
             model.hoverRegion = model.allRegions[i];
         }
@@ -78,15 +89,19 @@ function doHittest(pt) {
     if (model.hoverRegion != originalHoverRegion)
         queueRedraw();
 }
-function queueRedraw() {
-    window.requestAnimationFrame(function (time) {
+
+function queueRedraw(): void {
+    window.requestAnimationFrame(function (time: number) {
         drawModel();
     });
 }
-function drawModel(time) {
+
+function drawModel(time?: number): void {
     if (!time)
         time = window.performance.now();
-    context.drawImage(img, 0, 0);
+
+    context.drawImage(img, 0, 0, 1354, 850);
+
     for (var i = 0; i < model.allRegions.length; i++) {
         drawRegion(context, model.allRegions[i]);
     }
@@ -106,7 +121,8 @@ function drawModel(time) {
         context.stroke();
     }
 }
-function drawRegion(ctx, r) {
+
+function drawRegion(ctx: CanvasRenderingContext2D, r: Region) {
     ctx.strokeStyle = 'red';
     context.lineWidth = 3;
     if (r == model.hoverRegion) {
@@ -120,8 +136,10 @@ function drawRegion(ctx, r) {
     }
     ctx.stroke();
 }
-function convertCoords(c, x, y) {
+
+function convertCoords(c: HTMLCanvasElement, x: number, y: number): Point {
     var bbox = c.getBoundingClientRect();
-    return new Point(x - bbox.left * (c.width / bbox.width), y - bbox.top * (c.height / bbox.height));
+    return new Point(
+        x - bbox.left * (c.width / bbox.width),
+        y - bbox.top * (c.height / bbox.height));
 }
-//# sourceMappingURL=drawpoly.js.map
