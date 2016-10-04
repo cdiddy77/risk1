@@ -1,4 +1,4 @@
-/// <reference path="./node_modules/@types/jquery/index.d.ts" />
+/// <reference path="../node_modules/@types/jquery/index.d.ts" />
 var canvas: HTMLCanvasElement = <HTMLCanvasElement>document.getElementById('canvas');
 var context: CanvasRenderingContext2D = canvas.getContext('2d');
 var img: HTMLImageElement;
@@ -18,6 +18,7 @@ class Region {
     coords: Polyline;
     name: string;
     unitCoords: Point;
+    adjacent: Region[] = [];
 }
 
 var model: Model = new Model();
@@ -99,11 +100,15 @@ function queueRedraw(): void {
 function drawModel(time?: number): void {
     if (!time)
         time = window.performance.now();
-
     context.drawImage(img, 0, 0, 1354, 850);
 
     for (var i = 0; i < model.allRegions.length; i++) {
         drawRegion(context, model.allRegions[i]);
+        if (model.allRegions[i].unitCoords != null) {
+            context.beginPath();
+            context.arc(model.allRegions[i].unitCoords.x, model.allRegions[i].unitCoords.y, 5, 0, 2 * Math.PI);
+            context.stroke();
+        }
     }
     if (model.activeDrawRegion != null) {
         context.strokeStyle = 'green';

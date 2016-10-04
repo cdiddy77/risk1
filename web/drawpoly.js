@@ -1,4 +1,4 @@
-/// <reference path="./node_modules/@types/jquery/index.d.ts" />
+/// <reference path="../node_modules/@types/jquery/index.d.ts" />
 var canvas = document.getElementById('canvas');
 var context = canvas.getContext('2d');
 var img;
@@ -13,6 +13,7 @@ var Model = (function () {
 }());
 var Region = (function () {
     function Region(p, n) {
+        this.adjacent = [];
         this.coords = p;
         this.name = n;
     }
@@ -94,6 +95,11 @@ function drawModel(time) {
     context.drawImage(img, 0, 0, 1354, 850);
     for (var i = 0; i < model.allRegions.length; i++) {
         drawRegion(context, model.allRegions[i]);
+        if (model.allRegions[i].unitCoords != null) {
+            context.beginPath();
+            context.arc(model.allRegions[i].unitCoords.x, model.allRegions[i].unitCoords.y, 5, 0, 2 * Math.PI);
+            context.stroke();
+        }
     }
     if (model.activeDrawRegion != null) {
         context.strokeStyle = 'green';
