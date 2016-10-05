@@ -18,10 +18,11 @@ class Region {
     coords: Polyline;
     name: string;
     unitCoords: Point;
-    adjacent: Region[] = [];
+    adjacent: string[] = ["placeholder"];
+    startingUnits:number = 1;
 }
 
-var model: Model = new Model();
+var model: Model = new Model(); 
 
 $(() => {
     console.log('we were here');
@@ -40,6 +41,7 @@ $(() => {
         var pt = Point.parse(ev);
         if (model.hoverRegion != null) {
             model.hoverRegion.unitCoords = pt;
+            model.hoverRegion.name = (<HTMLInputElement>document.getElementById("regionName")).value;
         }
         // if the point is really close to the start of the polyline, 
         // then we will just close the polyline

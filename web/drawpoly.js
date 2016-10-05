@@ -13,7 +13,8 @@ var Model = (function () {
 }());
 var Region = (function () {
     function Region(p, n) {
-        this.adjacent = [];
+        this.adjacent = ["placeholder"];
+        this.startingUnits = 1;
         this.coords = p;
         this.name = n;
     }
@@ -36,6 +37,7 @@ $(function () {
         var pt = Point.parse(ev);
         if (model.hoverRegion != null) {
             model.hoverRegion.unitCoords = pt;
+            model.hoverRegion.name = document.getElementById("regionName").value;
         }
         // if the point is really close to the start of the polyline, 
         // then we will just close the polyline
