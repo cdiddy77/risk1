@@ -17,6 +17,7 @@ class GameRegion {
         this.adjacent = a;
         this.startingUnits = u;
         this.unitCoords = c;
+        this.currentUnits = u;
     }
     coords: Polyline;
     name: string;
@@ -25,7 +26,7 @@ class GameRegion {
     startingUnits: number = 1;
     team: string;
     continentColor: string;
-
+    currentUnits: number = 0;
     static getRegion(name: string, all: GameRegion[]): GameRegion {
         for (let i = 0; i < all.length; i++) {
             if (all[i].name == name)
@@ -40,6 +41,7 @@ interface IContinent {
     name: string;
     territories: string[];
     ownershipPoints: number;
+    color: string;
 }
 
 class Card {
@@ -137,6 +139,7 @@ $.getJSON('continents.json', function (data) {
 });
 
 function setup() {
+    currentPlayer = players[0];
     var deck: Card[] = [];
     for (var i = 0; i < model.allRegions.length; i++) {
         deck[i] = new Card(model.allRegions[i], model.allRegions[i].startingUnits)
@@ -151,8 +154,7 @@ function setup() {
     for (var i = 0; i < deck.length; i++) {
         deck[i].region.team = players[i % numPlayers].team;
     }
-    var northAmerica = new Continent("northAmerica", [GameRegion.getRegion("Alberta", model.allRegions)], 11);
-    console.log(northAmerica);
+    
 }
 
 function doHittest(pt: Point) {
@@ -180,7 +182,10 @@ function drawModel(time?: number): void {
     for (var i = 0; i < model.allRegions.length; i++) {
         drawRegion(context, model.allRegions[i]);
         if (model.allRegions[i].unitCoords != null) {
-            context.fillText(model.allRegions[i].name, model.allRegions[i].unitCoords.x, model.allRegions[i].unitCoords.y);
+            context.fillStyle = model.allRegions[i].team;
+            context.fillText(model.allRegions[i].name + ' ' + model.allRegions[i].currentUnits.toString,
+                             model.allRegions[i].unitCoords.x,
+                             model.allRegions[i].unitCoords.y);
         }
     }
 
@@ -228,14 +233,21 @@ function drawRegion(ctx: CanvasRenderingContext2D, r: GameRegion) {
     }
     r.coords.draw(ctx);
     if (r == model.hoverRegion) {
-        context.globalAlpha = 0.3;
+        for (let i = 0; i < continents.length; i++){
+            if (continents[i].territories.indexOf(r.name) >= 0) {
+                context.fillStyle = continents[i].color;
+            }
+        context.globalAlpha = 0.5;
         context.fill();
         context.globalAlpha = 1;
     } else if (model.hoverRegion != null) {
         // is it adjacent?
         if (model.hoverRegion.adjacent.indexOf(r.name) >= 0) {
-            context.fillStyle = 'cornflowerblue';
-            context.globalAlpha = 0.6;
+            for (let i = 0; i < continents.length; i++){
+            if (continents[i].territories.indexOf(r.name) >= 0) {
+                context.fillStyle = continents[i].color;
+            }
+            context.globalAlpha = 0.3;
             context.fill();
             context.globalAlpha = 1;
         }
