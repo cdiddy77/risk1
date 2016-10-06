@@ -167,7 +167,7 @@ namespace drawpoly {
         } else if (model.hoverRegion != null) {
             // is it adjacent?
             if (model.hoverRegion.adjacent.indexOf(r.name) >= 0) {
-                context.fillStyle = 'cornflowerblue';
+                context.fillStyle = 'green';
                 context.globalAlpha = 0.6;
                 context.fill();
                 context.globalAlpha = 1;

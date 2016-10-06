@@ -11,7 +11,8 @@
             "Eastern U.S.",
             "Central America",
             "Greenland"
-        ]
+        ],
+        "color": "yellow"
     },
     {
         "name": "South America",
@@ -20,7 +21,8 @@
             "Brazil",
             "Peru",
             "Argentina"
-        ]
+        ],
+        "color": "orange"
     },
     {
         "name": "Africa",
@@ -31,7 +33,8 @@
             "Congo",
             "South Africa",
             "Madagascar"
-        ]
+        ],
+        "color": "brown"
     },
     {
         "name": "Australia",
@@ -40,7 +43,8 @@
             "New Guinea",
             "East Australia",
             "West Australia"
-        ]
+        ],
+        "color": "purple"
     },
     {
         "name": "Europe",
@@ -52,7 +56,8 @@
             "West EU",
             "Russia",
             "Scandinavia"
-        ]
+        ],
+        "color": "blue"
     },
     {
         "name": "Asia",
@@ -69,7 +74,8 @@
             "Southeast Asia",
             "Japan",
             "Kamchatka"
-        ]
+        ],
+        "color": "green"
     }
     
 ]

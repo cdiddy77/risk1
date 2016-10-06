@@ -139,6 +139,7 @@ $.getJSON('continents.json', function (data) {
 });
 
 function setup() {
+    console.log("check1");
     currentPlayer = players[0];
     var deck: Card[] = [];
     for (var i = 0; i < model.allRegions.length; i++) {
@@ -154,7 +155,7 @@ function setup() {
     for (var i = 0; i < deck.length; i++) {
         deck[i].region.team = players[i % numPlayers].team;
     }
-    
+
 }
 
 function doHittest(pt: Point) {
@@ -184,8 +185,8 @@ function drawModel(time?: number): void {
         if (model.allRegions[i].unitCoords != null) {
             context.fillStyle = model.allRegions[i].team;
             context.fillText(model.allRegions[i].name + ' ' + model.allRegions[i].currentUnits.toString,
-                             model.allRegions[i].unitCoords.x,
-                             model.allRegions[i].unitCoords.y);
+                model.allRegions[i].unitCoords.x,
+                model.allRegions[i].unitCoords.y);
         }
     }
 
@@ -233,29 +234,30 @@ function drawRegion(ctx: CanvasRenderingContext2D, r: GameRegion) {
     }
     r.coords.draw(ctx);
     if (r == model.hoverRegion) {
-        for (let i = 0; i < continents.length; i++){
+        for (let i = 0; i < continents.length; i++) {
             if (continents[i].territories.indexOf(r.name) >= 0) {
                 context.fillStyle = continents[i].color;
             }
+        }
         context.globalAlpha = 0.5;
         context.fill();
         context.globalAlpha = 1;
     } else if (model.hoverRegion != null) {
         // is it adjacent?
         if (model.hoverRegion.adjacent.indexOf(r.name) >= 0) {
-            for (let i = 0; i < continents.length; i++){
-            if (continents[i].territories.indexOf(r.name) >= 0) {
-                context.fillStyle = continents[i].color;
+            for (let i = 0; i < continents.length; i++) {
+                if (continents[i].territories.indexOf(r.name) >= 0) {
+                    context.fillStyle = continents[i].color;
+                }
+                context.globalAlpha = 0.3;
+                context.fill();
+                context.globalAlpha = 1;
             }
-            context.globalAlpha = 0.3;
-            context.fill();
-            context.globalAlpha = 1;
         }
+        ctx.stroke();
+        ctx.restore();
     }
-    ctx.stroke();
-    ctx.restore();
 }
-
 
 function convertCoords(c: HTMLCanvasElement, x: number, y: number): Point {
     var bbox = c.getBoundingClientRect();
