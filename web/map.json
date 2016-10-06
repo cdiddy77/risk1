@@ -531,7 +531,7 @@
         "adjacent": [
             "Greenland",
             "Great Britain",
-            "Scandanavia"
+            "Scandinavia"
         ],
         "startingUnits": 1,
         "coords": {
@@ -568,7 +568,7 @@
         "adjacent": [
             "Iceland",
             "Great Britain",
-            "Northern EU",
+            "North EU",
             "Russia"
         ],
         "startingUnits": 1,
@@ -775,7 +775,7 @@
             "South EU",
             "West EU",
             "Scandinavia",
-            "GreatBritain",
+            "Great Britain",
             "Russia"
         ],
         "startingUnits": 2,
@@ -827,7 +827,7 @@
                 }
             ]
         },
-        "name": "NorthEU",
+        "name": "North EU",
         "unitCoords": {
             "x": 638,
             "y": 265
@@ -1175,7 +1175,7 @@
                 }
             ]
         },
-        "name": "MiddleEast",
+        "name": "Middle East",
         "unitCoords": {
             "x": 794,
             "y": 395

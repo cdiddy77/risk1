@@ -105,6 +105,9 @@ class Vector {
 }
 
 class Polyline {
+    constructor(points: Point[] = []){
+        this.pts = points;
+    }
     pts: Point[] = [];
 
     addPoint(p: Point) {

@@ -89,8 +89,10 @@ var Vector = (function () {
     return Vector;
 }());
 var Polyline = (function () {
-    function Polyline() {
+    function Polyline(points) {
+        if (points === void 0) { points = []; }
         this.pts = [];
+        this.pts = points;
     }
     Polyline.prototype.addPoint = function (p) {
         this.pts.push(p);

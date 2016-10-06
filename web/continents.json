@@ -1,0 +1,75 @@
+[
+    {
+        "name": "North America",
+        "territories": [
+            "Northwest Territory",
+            "Alberta",
+            "Alaska",
+            "Western U.S.",
+            "Ontario",
+            "East Canada",
+            "Eastern U.S.",
+            "Central America",
+            "Greenland"
+        ]
+    },
+    {
+        "name": "South America",
+        "territories": [
+            "Venezuela",
+            "Brazil",
+            "Peru",
+            "Argentina"
+        ]
+    },
+    {
+        "name": "Africa",
+        "territories": [
+            "North Africa",
+            "Egypt",
+            "East Africa",
+            "Congo",
+            "South Africa",
+            "Madagascar"
+        ]
+    },
+    {
+        "name": "Australia",
+        "territories": [
+            "Indonesia",
+            "New Guinea",
+            "East Australia",
+            "West Australia"
+        ]
+    },
+    {
+        "name": "Europe",
+        "territories": [
+            "Iceland",
+            "Great Britain",
+            "North EU",
+            "South EU",
+            "West EU",
+            "Russia",
+            "Scandinavia"
+        ]
+    },
+    {
+        "name": "Asia",
+        "territories": [
+            "Middle East",
+            "Afghanistan",
+            "Ural",
+            "India",
+            "China",
+            "Mongolia",
+            "Irkutsk",
+            "Siberia",
+            "Yakutsk",
+            "Southeast Asia",
+            "Japan",
+            "Kamchatka"
+        ]
+    }
+    
+]
