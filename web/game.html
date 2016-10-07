@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>Draw Poly</title>
+    <title>RISK</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- Latest compiled and minified CSS -->
@@ -36,6 +36,15 @@
         .std-margin {
             margin: 10px;
         }
+        .redBorder {
+            border:purple solid 5px;
+        }
+        .hidden>div {
+            display:none;
+        }
+        .visible>div {
+            display:block;
+        }
     </style>
 </head>
 
@@ -54,7 +63,13 @@
             </div>
         </div>
     </div>
-
+    <div id='battleBox' class='container'>
+        <h1>BATTLE INFO</h1>
+        <p>battle info shows up here.</p>
+    </div>
+    <div id='warning' class='alert alert-danger'>
+        <strong>you FOOL!</strong> invalid click.
+    </div>
     <div id='canvasDiv'>
         <canvas id='canvas' width="1354" height="850">
         </canvas>

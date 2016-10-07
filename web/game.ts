@@ -34,7 +34,10 @@ class GameRegion {
         }
         return null;
     }
-
+    static take(from: GameRegion) {
+        from.currentUnits--;
+        heldUnits++;
+    }
 }
 
 interface IContinent {
@@ -55,6 +58,7 @@ class Card {
 }
 class Player {
     team: string;
+    order: number;
 }
 class Continent {
     constructor(n: string, r: GameRegion[], p: number) {
@@ -67,11 +71,43 @@ class Continent {
     points: number = 0;
 }
 
+$('#warning').addClass('hidden');
+canvas.onmousedown = function (ev: MouseEvent) {
+    if (model.hoverRegion != null) {
+        //if (model.hoverRegion.team != currentPlayer.team && heldUnits == 0) {
+         //   $('#warning').removeClass('hidden');
+         //   console.log('not yours');
+        //}
+        //if (model.hoverRegion.team == currentPlayer.team) {
+            nextClick(model.hoverRegion.adjacent, model.hoverRegion);
+        //}
+
+    }
+}
+    var selectedCountry: GameRegion = null;
+function nextClick(adjacent: string[], startRegion: GameRegion) {
+    console.log('check2');
+
+        if (selectedCountry == null){
+            console.log('check3');
+        $('#battleBox').text(startRegion.name+' is attacking with '+startRegion.currentUnits);
+        selectedCountry = startRegion;
+    }
+    if (selectedCountry != null){
+        if (selectedCountry.adjacent.indexOf(model.hoverRegion.name) >= 0 && model.hoverRegion.team != selectedCountry.team){
+            console.log('check4');
+            $('#battleBox').text(selectedCountry.name+' is attacking '+model.hoverRegion.name+
+            ' with '+selectedCountry.currentUnits+' units ');
+        }
+    }
+    
+}
+
 var players: Player[] = [];
 var numPlayers: number = 0;
 var currentPlayer: Player;
 var model: GameModel = new GameModel();
-
+var heldUnits: number = 0;
 $(() => {
     console.log('we were here');
     img = <HTMLImageElement>document.getElementById('riskmap');
@@ -99,6 +135,9 @@ $(() => {
         players[0].team = "red";
         players[1].team = "cornflowerblue";
         players[2].team = "green";
+        players[0].order = 0;
+        players[1].order = 1;
+        players[2].order = 2;
         setup();
     });
 
@@ -111,6 +150,10 @@ $(() => {
         players[1].team = "cornflowerblue";
         players[2].team = "green";
         players[3].team = "yellow";
+        players[0].order = 0;
+        players[1].order = 1;
+        players[2].order = 2;
+        players[3].order = 3;
         setup();
     });
     $('#fivePlayers').click(function (ev) {
@@ -123,6 +166,11 @@ $(() => {
         players[2].team = "green";
         players[3].team = "yellow";
         players[4].team = "black";
+        players[0].order = 0;
+        players[1].order = 1;
+        players[2].order = 2;
+        players[3].order = 3;
+        players[4].order = 4;
         setup();
     });
     //how do i make a comment??
@@ -179,12 +227,11 @@ function drawModel(time?: number): void {
     if (!time)
         time = window.performance.now();
     context.drawImage(img, 0, 0, 1354, 850);
-
     for (var i = 0; i < model.allRegions.length; i++) {
         drawRegion(context, model.allRegions[i]);
         if (model.allRegions[i].unitCoords != null) {
             context.fillStyle = model.allRegions[i].team;
-            context.fillText(model.allRegions[i].name + ' ' + model.allRegions[i].currentUnits.toString,
+            context.fillText(model.allRegions[i].name + ' ' + model.allRegions[i].currentUnits,
                 model.allRegions[i].unitCoords.x,
                 model.allRegions[i].unitCoords.y);
         }
@@ -239,23 +286,27 @@ function drawRegion(ctx: CanvasRenderingContext2D, r: GameRegion) {
                 context.fillStyle = continents[i].color;
             }
         }
-        context.globalAlpha = 0.5;
+        context.globalAlpha = 0.6;
         context.fill();
-        context.globalAlpha = 1;
+        context.globalAlpha = 1.0;
     } else if (model.hoverRegion != null) {
         // is it adjacent?
         if (model.hoverRegion.adjacent.indexOf(r.name) >= 0) {
+
             for (let i = 0; i < continents.length; i++) {
+
                 if (continents[i].territories.indexOf(r.name) >= 0) {
+
                     context.fillStyle = continents[i].color;
+                    context.globalAlpha = 0.3;
+                    context.fill();
+                    context.globalAlpha = 1.0;
                 }
-                context.globalAlpha = 0.3;
-                context.fill();
-                context.globalAlpha = 1;
+
             }
         }
-        ctx.stroke();
-        ctx.restore();
+
+
     }
 }
 

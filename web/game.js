@@ -15,11 +15,13 @@ var GameRegion = (function () {
     function GameRegion(p, n, a, u, c) {
         this.adjacent = ["placeholder"];
         this.startingUnits = 1;
+        this.currentUnits = 0;
         this.coords = p;
         this.name = n;
         this.adjacent = a;
         this.startingUnits = u;
         this.unitCoords = c;
+        this.currentUnits = u;
     }
     GameRegion.getRegion = function (name, all) {
         for (var i = 0; i < all.length; i++) {
@@ -27,6 +29,10 @@ var GameRegion = (function () {
                 return all[i];
         }
         return null;
+    };
+    GameRegion.take = function (from) {
+        from.currentUnits--;
+        heldUnits++;
     };
     return GameRegion;
 }());
@@ -53,10 +59,38 @@ var Continent = (function () {
     }
     return Continent;
 }());
+$('#warning').addClass('hidden');
+canvas.onmousedown = function (ev) {
+    if (model.hoverRegion != null) {
+        //if (model.hoverRegion.team != currentPlayer.team && heldUnits == 0) {
+        //   $('#warning').removeClass('hidden');
+        //   console.log('not yours');
+        //}
+        //if (model.hoverRegion.team == currentPlayer.team) {
+        nextClick(model.hoverRegion.adjacent, model.hoverRegion);
+    }
+};
+var selectedCountry = null;
+function nextClick(adjacent, startRegion) {
+    console.log('check2');
+    if (selectedCountry == null) {
+        console.log('check3');
+        $('#battleBox').text(startRegion.name + ' is attacking with ' + startRegion.currentUnits);
+        selectedCountry = startRegion;
+    }
+    if (selectedCountry != null) {
+        if (selectedCountry.adjacent.indexOf(model.hoverRegion.name) >= 0 && model.hoverRegion.team != selectedCountry.team) {
+            console.log('check4');
+            $('#battleBox').text(selectedCountry.name + ' is attacking ' + model.hoverRegion.name +
+                ' with ' + selectedCountry.currentUnits + ' units ');
+        }
+    }
+}
 var players = [];
 var numPlayers = 0;
 var currentPlayer;
 var model = new GameModel();
+var heldUnits = 0;
 $(function () {
     console.log('we were here');
     img = document.getElementById('riskmap');
@@ -83,6 +117,9 @@ $(function () {
         players[0].team = "red";
         players[1].team = "cornflowerblue";
         players[2].team = "green";
+        players[0].order = 0;
+        players[1].order = 1;
+        players[2].order = 2;
         setup();
     });
     $('#fourPlayers').click(function (ev) {
@@ -94,6 +131,10 @@ $(function () {
         players[1].team = "cornflowerblue";
         players[2].team = "green";
         players[3].team = "yellow";
+        players[0].order = 0;
+        players[1].order = 1;
+        players[2].order = 2;
+        players[3].order = 3;
         setup();
     });
     $('#fivePlayers').click(function (ev) {
@@ -106,6 +147,11 @@ $(function () {
         players[2].team = "green";
         players[3].team = "yellow";
         players[4].team = "black";
+        players[0].order = 0;
+        players[1].order = 1;
+        players[2].order = 2;
+        players[3].order = 3;
+        players[4].order = 4;
         setup();
     });
     //how do i make a comment??
@@ -118,6 +164,8 @@ $.getJSON('continents.json', function (data) {
     continents = data;
 });
 function setup() {
+    console.log("check1");
+    currentPlayer = players[0];
     var deck = [];
     for (var i = 0; i < model.allRegions.length; i++) {
         deck[i] = new Card(model.allRegions[i], model.allRegions[i].startingUnits);
@@ -132,8 +180,6 @@ function setup() {
     for (var i = 0; i < deck.length; i++) {
         deck[i].region.team = players[i % numPlayers].team;
     }
-    var northAmerica = new Continent("northAmerica", [GameRegion.getRegion("Alberta", model.allRegions)], 11);
-    console.log(northAmerica);
 }
 function doHittest(pt) {
     var originalHoverRegion = model.hoverRegion;
@@ -158,7 +204,8 @@ function drawModel(time) {
     for (var i = 0; i < model.allRegions.length; i++) {
         drawRegion(context, model.allRegions[i]);
         if (model.allRegions[i].unitCoords != null) {
-            context.fillText(model.allRegions[i].name, model.allRegions[i].unitCoords.x, model.allRegions[i].unitCoords.y);
+            context.fillStyle = model.allRegions[i].team;
+            context.fillText(model.allRegions[i].name + ' ' + model.allRegions[i].currentUnits, model.allRegions[i].unitCoords.x, model.allRegions[i].unitCoords.y);
         }
     }
     if (model.activeDrawRegion != null) {
@@ -203,21 +250,28 @@ function drawRegion(ctx, r) {
     }
     r.coords.draw(ctx);
     if (r == model.hoverRegion) {
-        context.globalAlpha = 0.3;
+        for (var i = 0; i < continents.length; i++) {
+            if (continents[i].territories.indexOf(r.name) >= 0) {
+                context.fillStyle = continents[i].color;
+            }
+        }
+        context.globalAlpha = 0.6;
         context.fill();
-        context.globalAlpha = 1;
+        context.globalAlpha = 1.0;
     }
     else if (model.hoverRegion != null) {
         // is it adjacent?
         if (model.hoverRegion.adjacent.indexOf(r.name) >= 0) {
-            context.fillStyle = 'cornflowerblue';
-            context.globalAlpha = 0.6;
-            context.fill();
-            context.globalAlpha = 1;
+            for (var i = 0; i < continents.length; i++) {
+                if (continents[i].territories.indexOf(r.name) >= 0) {
+                    context.fillStyle = continents[i].color;
+                    context.globalAlpha = 0.3;
+                    context.fill();
+                    context.globalAlpha = 1.0;
+                }
+            }
         }
     }
-    ctx.stroke();
-    ctx.restore();
 }
 function convertCoords(c, x, y) {
     var bbox = c.getBoundingClientRect();
