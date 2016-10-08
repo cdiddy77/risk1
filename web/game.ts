@@ -72,42 +72,112 @@ class Continent {
 }
 
 $('#warning').addClass('hidden');
+$('#attackButton').addClass('hidden');
 canvas.onmousedown = function (ev: MouseEvent) {
     if (model.hoverRegion != null) {
-        if (model.hoverRegion.team != currentPlayer.team && selectedCountry == null) {
+        if (model.hoverRegion.team != currentPlayer.team && selectedRegion == null) {
             $('#warning').removeClass('hidden');
             console.log('not yours');
         }
-        if (selectedCountry != null || model.hoverRegion.team == currentPlayer.team) {
+        if (selectedRegion != null || model.hoverRegion.team == currentPlayer.team) {
             $('#warning').addClass('hidden');
             nextClick(model.hoverRegion.adjacent, model.hoverRegion);
         }
 
     }
 }
-var selectedCountry: GameRegion = null;
+var selectedRegion: GameRegion = null;
 function nextClick(adjacent: string[], startRegion: GameRegion) {
     console.log('check2');
 
-    if (selectedCountry == null) {
+    if (selectedRegion == null) {
         console.log('check3');
         if (model.hoverRegion.currentUnits > 1) {
             $('#battleBox').text(startRegion.name + ' is attacking with ' + (startRegion.currentUnits - 1) + ' unit(s)');
-            selectedCountry = startRegion;
+            selectedRegion = startRegion;
         }
-        else {$('#battleBox').text('not enough units to attack!');selectedCountry = null;}
+        else { $('#battleBox').text('not enough units to attack!'); selectedRegion = null; }
     }
-    else if (selectedCountry != null) {
-        if (selectedCountry.adjacent.indexOf(model.hoverRegion.name) >= 0 && model.hoverRegion.team != selectedCountry.team) {
+    else if (selectedRegion != null) {
+        if (selectedRegion.adjacent.indexOf(model.hoverRegion.name) >= 0 && model.hoverRegion.team != selectedRegion.team) {
             console.log('check4');
-            $('#battleBox').text(selectedCountry.name + ' is attacking ' + model.hoverRegion.name +
-                ' with ' + (selectedCountry.currentUnits - 1) + ' unit(s)');
+            $('#battleBox').text(selectedRegion.name + ' is attacking ' + model.hoverRegion.name +
+                ' with ' + (selectedRegion.currentUnits - 1) + ' unit(s)');
+            if (selectedRegion.currentUnits >= 3) {
+                attackDice = 3;
+            } else attackDice = selectedRegion.currentUnits - 1;
+            if (model.hoverRegion.currentUnits >= 2) {
+                defenseDice = 2;
+            } else defenseDice = model.hoverRegion.currentUnits;
+            attackRegion = selectedRegion;
+            defenseRegion = model.hoverRegion;
+            $('#attackButton').removeClass('hidden');
         }
-        else {$('#battleBox').text('can\'t attack there!'); selectedCountry = null;}
+        else { $('#battleBox').text('can\'t attack there!'); selectedRegion = null; }
     }
-
 }
-
+var attackRegion: GameRegion;
+var defenseRegion: GameRegion;
+$('#nextTurn').click(function (ev) {
+    console.log('check6');
+    if (currentPlayer.order == numPlayers - 1){
+        currentPlayer = players[0];
+    }
+    else currentPlayer = players[currentPlayer.order + 1];
+})
+$('#attackButton').click(function (ev) {
+    console.log('check5');
+    var temp: number = 0;
+    for (let i = 0; i < defenseDice; i++) {
+        defenseRoll[i] = Math.floor(Math.random() * ((6-1)+1) + 1);
+    }
+    for (let i = 0; i < attackDice; i++) {
+        attackRoll[i] = Math.floor(Math.random() * ((6-1)+1) + 1);
+    }
+    if (attackRoll.length == 3) {
+        if (attackRoll[2] > attackRoll[0]) {
+            temp = attackRoll[2];
+            attackRoll[2] = attackRoll[0];
+            attackRoll[0] = temp;
+        }
+        if (attackRoll[2] > attackRoll[1]) {
+            temp = attackRoll[2];
+            attackRoll[2] = attackRoll[1];
+            attackRoll[1] = temp;
+        }
+    }
+    if (defenseRoll[1] > defenseRoll[0]){
+        temp = defenseRoll[1];
+        defenseRoll[1] = defenseRoll[0];
+        defenseRoll[0] = temp;
+    }
+    if (attackDice > 1 && defenseDice > 1) {
+        if (attackRoll[0] > defenseRoll[0]) {
+            defenseRegion.currentUnits--;
+        } else attackRegion.currentUnits--;
+        if (attackRoll[1] > defenseRoll[1]) {
+            defenseRegion.currentUnits--;
+        } else attackRegion.currentUnits--;
+    }
+    else {
+        if (attackRoll[0] > defenseRoll[0]){
+            defenseRegion.currentUnits--;
+        } else attackRegion.currentUnits--;
+    }
+    if (attackRegion.currentUnits < 2){
+        $('#attackButton').addClass('hidden');
+        $('#battleBox').text('not enought units to continue attacking!');
+        selectedRegion = null;
+    }
+    if  (defenseRegion.currentUnits == 0){
+        defenseRegion.team = currentPlayer.team;
+        defenseRegion.currentUnits = attackRegion.currentUnits - 1;
+        attackRegion.currentUnits = 1;
+        $('#attackButton').addClass('hidden');
+        $('#battleBox').text('huzzah! '+currentPlayer.team+' takes '+defenseRegion.name);
+        selectedRegion = null;
+    }
+});
 var players: Player[] = [];
 var numPlayers: number = 0;
 var currentPlayer: Player;
@@ -115,6 +185,8 @@ var model: GameModel = new GameModel();
 var heldUnits: number = 0;
 var attackDice: number = 0;
 var defenseDice: number = 0;
+var attackRoll: number[] = [0, 0, 0];
+var defenseRoll: number[] = [0, 0];
 $(() => {
     console.log('we were here');
     img = <HTMLImageElement>document.getElementById('riskmap');
@@ -194,6 +266,7 @@ $.getJSON('continents.json', function (data) {
 });
 
 function setup() {
+    $('#attackButton').addClass('hidden');
     console.log("check1");
     currentPlayer = players[0];
     var deck: Card[] = [];

@@ -1,7 +1,6 @@
 {
   "name": "project1",
   "version": "1.0.0",
-  "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -11,5 +10,14 @@
   "dependencies": {
     "@types/jquery": "^2.0.32",
     "jquery": "^3.1.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cdiddy77/risk1.git"
+  },
+  "bugs": {
+    "url": "https://github.com/cdiddy77/risk1/issues"
+  },
+  "homepage": "https://github.com/cdiddy77/risk1#readme",
+  "description": ""
 }
