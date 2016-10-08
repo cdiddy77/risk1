@@ -62,14 +62,16 @@ var Continent = (function () {
 $('#warning').addClass('hidden');
 $('#attackButton').addClass('hidden');
 canvas.onmousedown = function (ev) {
-    if (model.hoverRegion != null) {
-        if (model.hoverRegion.team != currentPlayer.team && selectedRegion == null) {
-            $('#warning').removeClass('hidden');
-            console.log('not yours');
-        }
-        if (selectedRegion != null || model.hoverRegion.team == currentPlayer.team) {
-            $('#warning').addClass('hidden');
-            nextClick(model.hoverRegion.adjacent, model.hoverRegion);
+    if (currentPhase = 1) {
+        if (model.hoverRegion != null) {
+            if (model.hoverRegion.team != currentPlayer.team && selectedRegion == null) {
+                $('#warning').removeClass('hidden');
+                console.log('not yours');
+            }
+            if (selectedRegion != null || model.hoverRegion.team == currentPlayer.team) {
+                $('#warning').addClass('hidden');
+                nextClick(model.hoverRegion.adjacent, model.hoverRegion);
+            }
         }
     }
 };
@@ -167,6 +169,18 @@ $('#attackButton').click(function (ev) {
         else
             attackRegion.currentUnits--;
     }
+    if (attackRegion.currentUnits >= 3) {
+        attackDice = 3;
+    }
+    else
+        attackDice = attackRegion.currentUnits - 1;
+    if (defenseRegion.currentUnits >= 2) {
+        defenseDice = 2;
+    }
+    else
+        defenseDice = defenseRegion.currentUnits;
+    $('#battleBox').text(attackRegion.name + ' rolls ' + attackRoll + ' and '
+        + defenseRegion.name + ' rolls ' + defenseRoll);
     if (attackRegion.currentUnits < 2) {
         $('#attackButton').addClass('hidden');
         $('#battleBox').text('not enought units to continue attacking!');
@@ -190,6 +204,7 @@ var attackDice = 0;
 var defenseDice = 0;
 var attackRoll = [0, 0, 0];
 var defenseRoll = [0, 0];
+var currentPhase = 1;
 $(function () {
     console.log('we were here');
     img = document.getElementById('riskmap');
@@ -279,6 +294,9 @@ function setup() {
     }
     for (var i = 0; i < deck.length; i++) {
         deck[i].region.team = players[i % numPlayers].team;
+    }
+    for (var i = 0; i < model.allRegions.length; i++) {
+        model.allRegions[i].currentUnits *= 5;
     }
 }
 function doHittest(pt) {

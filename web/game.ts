@@ -27,6 +27,7 @@ class GameRegion {
     team: string;
     continentColor: string;
     currentUnits: number = 0;
+
     static getRegion(name: string, all: GameRegion[]): GameRegion {
         for (let i = 0; i < all.length; i++) {
             if (all[i].name == name)
@@ -74,16 +75,19 @@ class Continent {
 $('#warning').addClass('hidden');
 $('#attackButton').addClass('hidden');
 canvas.onmousedown = function (ev: MouseEvent) {
-    if (model.hoverRegion != null) {
-        if (model.hoverRegion.team != currentPlayer.team && selectedRegion == null) {
-            $('#warning').removeClass('hidden');
-            console.log('not yours');
-        }
-        if (selectedRegion != null || model.hoverRegion.team == currentPlayer.team) {
-            $('#warning').addClass('hidden');
-            nextClick(model.hoverRegion.adjacent, model.hoverRegion);
-        }
 
+    if (currentPhase = 1) {
+        if (model.hoverRegion != null) {
+            if (model.hoverRegion.team != currentPlayer.team && selectedRegion == null) {
+                $('#warning').removeClass('hidden');
+                console.log('not yours');
+            }
+            if (selectedRegion != null || model.hoverRegion.team == currentPlayer.team) {
+                $('#warning').addClass('hidden');
+                nextClick(model.hoverRegion.adjacent, model.hoverRegion);
+            }
+
+        }
     }
 }
 var selectedRegion: GameRegion = null;
@@ -120,8 +124,9 @@ var attackRegion: GameRegion;
 var defenseRegion: GameRegion;
 $('#nextTurn').click(function (ev) {
     console.log('check6');
-    if (currentPlayer.order == numPlayers - 1){
+    if (currentPlayer.order == numPlayers - 1) {
         currentPlayer = players[0];
+
     }
     else currentPlayer = players[currentPlayer.order + 1];
 })
@@ -129,10 +134,10 @@ $('#attackButton').click(function (ev) {
     console.log('check5');
     var temp: number = 0;
     for (let i = 0; i < defenseDice; i++) {
-        defenseRoll[i] = Math.floor(Math.random() * ((6-1)+1) + 1);
+        defenseRoll[i] = Math.floor(Math.random() * ((6 - 1) + 1) + 1);
     }
     for (let i = 0; i < attackDice; i++) {
-        attackRoll[i] = Math.floor(Math.random() * ((6-1)+1) + 1);
+        attackRoll[i] = Math.floor(Math.random() * ((6 - 1) + 1) + 1);
     }
     if (attackRoll.length == 3) {
         if (attackRoll[2] > attackRoll[0]) {
@@ -146,7 +151,7 @@ $('#attackButton').click(function (ev) {
             attackRoll[1] = temp;
         }
     }
-    if (defenseRoll[1] > defenseRoll[0]){
+    if (defenseRoll[1] > defenseRoll[0]) {
         temp = defenseRoll[1];
         defenseRoll[1] = defenseRoll[0];
         defenseRoll[0] = temp;
@@ -160,21 +165,30 @@ $('#attackButton').click(function (ev) {
         } else attackRegion.currentUnits--;
     }
     else {
-        if (attackRoll[0] > defenseRoll[0]){
+        if (attackRoll[0] > defenseRoll[0]) {
             defenseRegion.currentUnits--;
         } else attackRegion.currentUnits--;
     }
-    if (attackRegion.currentUnits < 2){
+    if (attackRegion.currentUnits >= 3) {
+        attackDice = 3;
+    } else attackDice = attackRegion.currentUnits - 1;
+    if (defenseRegion.currentUnits >= 2) {
+        defenseDice = 2;
+    } else defenseDice = defenseRegion.currentUnits;
+    $('#battleBox').text(attackRegion.name + ' rolls ' + attackRoll + ' and '
+        + defenseRegion.name + ' rolls ' + defenseRoll);
+
+    if (attackRegion.currentUnits < 2) {
         $('#attackButton').addClass('hidden');
         $('#battleBox').text('not enought units to continue attacking!');
         selectedRegion = null;
     }
-    if  (defenseRegion.currentUnits == 0){
+    if (defenseRegion.currentUnits == 0) {
         defenseRegion.team = currentPlayer.team;
         defenseRegion.currentUnits = attackRegion.currentUnits - 1;
         attackRegion.currentUnits = 1;
         $('#attackButton').addClass('hidden');
-        $('#battleBox').text('huzzah! '+currentPlayer.team+' takes '+defenseRegion.name);
+        $('#battleBox').text('huzzah! ' + currentPlayer.team + ' takes ' + defenseRegion.name);
         selectedRegion = null;
     }
 });
@@ -187,6 +201,7 @@ var attackDice: number = 0;
 var defenseDice: number = 0;
 var attackRoll: number[] = [0, 0, 0];
 var defenseRoll: number[] = [0, 0];
+var currentPhase: number = 1;
 $(() => {
     console.log('we were here');
     img = <HTMLImageElement>document.getElementById('riskmap');
@@ -283,7 +298,9 @@ function setup() {
     for (var i = 0; i < deck.length; i++) {
         deck[i].region.team = players[i % numPlayers].team;
     }
-
+    for (var i = 0; i < model.allRegions.length; i++) {
+        model.allRegions[i].currentUnits *= 5;
+    }
 }
 
 function doHittest(pt: Point) {
