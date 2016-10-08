@@ -62,12 +62,14 @@ var Continent = (function () {
 $('#warning').addClass('hidden');
 canvas.onmousedown = function (ev) {
     if (model.hoverRegion != null) {
-        //if (model.hoverRegion.team != currentPlayer.team && heldUnits == 0) {
-        //   $('#warning').removeClass('hidden');
-        //   console.log('not yours');
-        //}
-        //if (model.hoverRegion.team == currentPlayer.team) {
-        nextClick(model.hoverRegion.adjacent, model.hoverRegion);
+        if (model.hoverRegion.team != currentPlayer.team && selectedCountry == null) {
+            $('#warning').removeClass('hidden');
+            console.log('not yours');
+        }
+        if (selectedCountry != null || model.hoverRegion.team == currentPlayer.team) {
+            $('#warning').addClass('hidden');
+            nextClick(model.hoverRegion.adjacent, model.hoverRegion);
+        }
     }
 };
 var selectedCountry = null;
@@ -75,14 +77,24 @@ function nextClick(adjacent, startRegion) {
     console.log('check2');
     if (selectedCountry == null) {
         console.log('check3');
-        $('#battleBox').text(startRegion.name + ' is attacking with ' + startRegion.currentUnits);
-        selectedCountry = startRegion;
+        if (model.hoverRegion.currentUnits > 1) {
+            $('#battleBox').text(startRegion.name + ' is attacking with ' + (startRegion.currentUnits - 1) + ' unit(s)');
+            selectedCountry = startRegion;
+        }
+        else {
+            $('#battleBox').text('not enough units to attack!');
+            selectedCountry = null;
+        }
     }
-    if (selectedCountry != null) {
+    else if (selectedCountry != null) {
         if (selectedCountry.adjacent.indexOf(model.hoverRegion.name) >= 0 && model.hoverRegion.team != selectedCountry.team) {
             console.log('check4');
             $('#battleBox').text(selectedCountry.name + ' is attacking ' + model.hoverRegion.name +
-                ' with ' + selectedCountry.currentUnits + ' units ');
+                ' with ' + (selectedCountry.currentUnits - 1) + ' unit(s)');
+        }
+        else {
+            $('#battleBox').text('can\'t attack there!');
+            selectedCountry = null;
         }
     }
 }
@@ -91,6 +103,8 @@ var numPlayers = 0;
 var currentPlayer;
 var model = new GameModel();
 var heldUnits = 0;
+var attackDice = 0;
+var defenseDice = 0;
 $(function () {
     console.log('we were here');
     img = document.getElementById('riskmap');
