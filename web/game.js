@@ -15,6 +15,7 @@ var GameRegion = (function () {
     function GameRegion(p, n, a, u, c) {
         this.adjacent = ["placeholder"];
         this.startingUnits = 1;
+        this.team = 'black';
         this.currentUnits = 0;
         this.coords = p;
         this.name = n;
@@ -31,8 +32,19 @@ var GameRegion = (function () {
         return null;
     };
     GameRegion.take = function (from) {
-        from.currentUnits--;
-        heldUnits++;
+        if (from.currentUnits > 1) {
+            from.currentUnits--;
+            heldUnits++;
+        }
+        else
+            $('#battleBox').text('not enough units to take!');
+    };
+    GameRegion.isAdjacent = function (region1, region2) {
+        if (region2.adjacent.indexOf(region1.name) >= 0) {
+            return true;
+        }
+        else
+            return false;
     };
     return GameRegion;
 }());
@@ -46,6 +58,20 @@ var Card = (function () {
 var Player = (function () {
     function Player() {
     }
+    Player.nextPlayer = function () {
+        console.log('yep');
+        if (currentPlayer.order == players.length - 1) {
+            currentPlayer = players[0];
+            if (currentPhase == 4) {
+                currentPhase = 1;
+            }
+            else if (currentPhase == 0) { }
+            else
+                currentPhase++;
+        }
+        else
+            currentPlayer = players[currentPlayer.order + 1];
+    };
     return Player;
 }());
 var Continent = (function () {
@@ -61,8 +87,47 @@ var Continent = (function () {
 }());
 $('#warning').addClass('hidden');
 $('#attackButton').addClass('hidden');
+var turn = 1;
 canvas.onmousedown = function (ev) {
-    if (currentPhase = 1) {
+    if (currentPhase == 0) {
+        if (round == 1) {
+            if (model.hoverRegion == null) {
+                $('#warning').removeClass('hidden');
+            }
+            if (model.hoverRegion != null) {
+                $('#warning').addClass('hidden');
+                model.hoverRegion.team = currentPlayer.team;
+            }
+        }
+        else {
+            if (model.hoverRegion == null) {
+                $('#warning').removeClass('hidden');
+            }
+            if (model.hoverRegion.team != currentPlayer.team) {
+                $('#warning').removeClass('hidden');
+            }
+            if (model.hoverRegion.team == currentPlayer.team) {
+                $('#warning').addClass('hidden');
+                model.hoverRegion.currentUnits++;
+            }
+        }
+        if (currentPlayer.order == players.length - 1 && turn != 1) {
+            unitPool--;
+        }
+        if (currentPlayer == players[players.length - 1]) {
+            if (turn == 42) {
+                round++;
+            }
+        }
+        if (model.hoverRegion != null && $('#warning').hasClass('hidden')) {
+            turn += 1;
+            Player.nextPlayer();
+        }
+        if (unitPool == 0) {
+            currentPhase = 1;
+        }
+    }
+    else if (currentPhase == 1) {
         if (model.hoverRegion != null) {
             if (model.hoverRegion.team != currentPlayer.team && selectedRegion == null) {
                 $('#warning').removeClass('hidden');
@@ -70,19 +135,55 @@ canvas.onmousedown = function (ev) {
             }
             if (selectedRegion != null || model.hoverRegion.team == currentPlayer.team) {
                 $('#warning').addClass('hidden');
-                nextClick(model.hoverRegion.adjacent, model.hoverRegion);
+                attackClick(model.hoverRegion.adjacent, model.hoverRegion);
             }
         }
     }
+    else if (currentPhase == 2) {
+        moveClick();
+    }
 };
+function moveClick() {
+    if (selectedRegion == null) {
+        if (model.hoverRegion.team == currentPlayer.team) {
+            selectedRegion = model.hoverRegion;
+            $('#warning').addClass('hidden');
+            GameRegion.take(selectedRegion);
+        }
+        if (model.hoverRegion.team != currentPlayer.team) {
+            $('#warning').removeClass('hidden');
+        }
+    }
+    else if (selectedRegion != null) {
+        if (model.hoverRegion == selectedRegion) {
+            GameRegion.take(selectedRegion);
+        }
+        else if (model.hoverRegion.team == currentPlayer.team) {
+            if (GameRegion.isAdjacent(model.hoverRegion, selectedRegion)) {
+                model.hoverRegion.currentUnits += heldUnits;
+                heldUnits = 0;
+                selectedRegion = null;
+            }
+            else {
+                $('#warning').removeClass('hidden');
+                selectedRegion = null;
+            }
+        }
+        else {
+            $('#warning').removeClass('hidden');
+            selectedRegion = null;
+        }
+    }
+}
 var selectedRegion = null;
-function nextClick(adjacent, startRegion) {
+function attackClick(adjacent, startRegion) {
     console.log('check2');
     if (selectedRegion == null) {
         console.log('check3');
         if (model.hoverRegion.currentUnits > 1) {
             $('#battleBox').text(startRegion.name + ' is attacking with ' + (startRegion.currentUnits - 1) + ' unit(s)');
             selectedRegion = startRegion;
+            attackUnits = selectedRegion.currentUnits - 1;
         }
         else {
             $('#battleBox').text('not enough units to attack!');
@@ -90,15 +191,23 @@ function nextClick(adjacent, startRegion) {
         }
     }
     else if (selectedRegion != null) {
-        if (selectedRegion.adjacent.indexOf(model.hoverRegion.name) >= 0 && model.hoverRegion.team != selectedRegion.team) {
+        if (model.hoverRegion == selectedRegion) {
+            if (attackUnits == selectedRegion.currentUnits - 1) {
+                attackUnits = 1;
+            }
+            else
+                attackUnits++;
+            $('#battleBox').text(startRegion.name + ' is attacking with ' + (attackUnits) + ' unit(s)');
+        }
+        else if (selectedRegion.adjacent.indexOf(model.hoverRegion.name) >= 0 && model.hoverRegion.team != selectedRegion.team) {
             console.log('check4');
             $('#battleBox').text(selectedRegion.name + ' is attacking ' + model.hoverRegion.name +
                 ' with ' + (selectedRegion.currentUnits - 1) + ' unit(s)');
-            if (selectedRegion.currentUnits >= 3) {
+            if (attackUnits >= 3) {
                 attackDice = 3;
             }
             else
-                attackDice = selectedRegion.currentUnits - 1;
+                attackDice = attackUnits;
             if (model.hoverRegion.currentUnits >= 2) {
                 defenseDice = 2;
             }
@@ -118,7 +227,7 @@ var attackRegion;
 var defenseRegion;
 $('#nextTurn').click(function (ev) {
     console.log('check6');
-    if (currentPlayer.order == numPlayers - 1) {
+    if (currentPlayer.order == players.length - 1) {
         currentPlayer = players[0];
     }
     else
@@ -196,7 +305,6 @@ $('#attackButton').click(function (ev) {
     }
 });
 var players = [];
-var numPlayers = 0;
 var currentPlayer;
 var model = new GameModel();
 var heldUnits = 0;
@@ -205,6 +313,10 @@ var defenseDice = 0;
 var attackRoll = [0, 0, 0];
 var defenseRoll = [0, 0];
 var currentPhase = 1;
+var attackUnits = 0;
+var classic = true;
+var round = 1;
+var unitPool = 0;
 $(function () {
     console.log('we were here');
     img = document.getElementById('riskmap');
@@ -224,7 +336,7 @@ $(function () {
         }
     };
     $('#threePlayers').click(function (ev) {
-        numPlayers = 3;
+        players.length = 3;
         for (var i = 0; i < 3; i++) {
             players[i] = new Player;
         }
@@ -237,7 +349,7 @@ $(function () {
         setup();
     });
     $('#fourPlayers').click(function (ev) {
-        numPlayers = 4;
+        players.length = 4;
         for (var i = 0; i < 4; i++) {
             players[i] = new Player;
         }
@@ -252,7 +364,7 @@ $(function () {
         setup();
     });
     $('#fivePlayers').click(function (ev) {
-        numPlayers = 5;
+        players.length = 5;
         for (var i = 0; i < 5; i++) {
             players[i] = new Player;
         }
@@ -285,18 +397,33 @@ function setup() {
     for (var i = 0; i < model.allRegions.length; i++) {
         deck[i] = new Card(model.allRegions[i], model.allRegions[i].startingUnits);
     }
-    var temp;
-    for (var i = deck.length - 1; i > 0; i--) {
-        var index = Math.floor(Math.random() * i);
-        temp = deck[i];
-        deck[i] = deck[index];
-        deck[index] = temp;
+    if (classic == false) {
+        var temp;
+        for (var i = deck.length - 1; i > 0; i--) {
+            var index = Math.floor(Math.random() * i);
+            temp = deck[i];
+            deck[i] = deck[index];
+            deck[index] = temp;
+        }
+        for (var i = 0; i < deck.length; i++) {
+            deck[i].region.team = players[i % players.length].team;
+        }
+        for (var i = 0; i < model.allRegions.length; i++) {
+            model.allRegions[i].currentUnits *= 5;
+        }
     }
-    for (var i = 0; i < deck.length; i++) {
-        deck[i].region.team = players[i % numPlayers].team;
-    }
-    for (var i = 0; i < model.allRegions.length; i++) {
-        model.allRegions[i].currentUnits *= 5;
+    if (classic == true) {
+        currentPhase = 0;
+        if (players.length == 3) {
+            unitPool = 3;
+        }
+        if (players.length == 4) {
+            unitPool = 30;
+        }
+        if (players.length == 5) {
+            unitPool = 25;
+        }
+        $('#battleBox').text('select your regions');
     }
 }
 function doHittest(pt) {
