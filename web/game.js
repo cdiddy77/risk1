@@ -91,10 +91,10 @@ var turn = 1;
 canvas.onmousedown = function (ev) {
     if (currentPhase == 0) {
         if (round == 1) {
-            if (model.hoverRegion == null) {
+            if (model.hoverRegion == null || model.hoverRegion.team != 'black') {
                 $('#warning').removeClass('hidden');
             }
-            if (model.hoverRegion != null) {
+            else if (model.hoverRegion != null) {
                 $('#warning').addClass('hidden');
                 model.hoverRegion.team = currentPlayer.team;
             }
@@ -128,6 +128,55 @@ canvas.onmousedown = function (ev) {
         }
     }
     else if (currentPhase == 1) {
+        if (hasInit == false) {
+            unitPool = 3;
+            var totalRegions;
+            totalRegions = 0;
+            for (var i = 0; i < model.allRegions.length; i++) {
+                if (model.allRegions[i].team == currentPlayer.team) {
+                    totalRegions++;
+                }
+            }
+            if (totalRegions >= 12 && totalRegions <= 14) {
+                unitPool += 1;
+            }
+            if (totalRegions >= 15 && totalRegions <= 17) {
+                unitPool += 2;
+            }
+            if (totalRegions >= 18 && totalRegions <= 20) {
+                unitPool += 3;
+            }
+            if (totalRegions >= 21 && totalRegions <= 23) {
+                unitPool += 4;
+            }
+            if (totalRegions >= 24 && totalRegions <= 26) {
+                unitPool += 5;
+            }
+            if (totalRegions >= 27 && totalRegions <= 29) {
+                unitPool += 6;
+            }
+            if (totalRegions >= 30 && totalRegions <= 32) {
+                unitPool += 7;
+            }
+            if (totalRegions >= 33 && totalRegions <= 35) {
+                unitPool += 8;
+            }
+            if (totalRegions >= 36 && totalRegions <= 39) {
+                unitPool += 9;
+            }
+            if (totalRegions >= 40 && totalRegions <= 42) {
+                unitPool += 10;
+            }
+            //--------------
+            //trade in cards
+            //--------------
+            hasInit = true;
+        }
+        unitPool--;
+        $('#battleBox').text('you have ' + unitPool + ' units to spend');
+        model.hoverRegion.currentUnits++;
+    }
+    else if (currentPhase == 2) {
         if (model.hoverRegion != null) {
             if (model.hoverRegion.team != currentPlayer.team && selectedRegion == null) {
                 $('#warning').removeClass('hidden');
@@ -139,7 +188,7 @@ canvas.onmousedown = function (ev) {
             }
         }
     }
-    else if (currentPhase == 2) {
+    else if (currentPhase == 3) {
         moveClick();
     }
 };
@@ -314,9 +363,10 @@ var attackRoll = [0, 0, 0];
 var defenseRoll = [0, 0];
 var currentPhase = 1;
 var attackUnits = 0;
-var classic = true;
+var classic = false;
 var round = 1;
 var unitPool = 0;
+var hasInit = false;
 $(function () {
     console.log('we were here');
     img = document.getElementById('riskmap');
