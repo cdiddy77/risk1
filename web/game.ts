@@ -191,6 +191,41 @@ canvas.onmousedown = function (ev: MouseEvent) {
     queueRedraw();
 }
 $('#tradein').addClass('hidden');
+$('#tradein').click (function (ev) {
+    if (currentPhase == 1){
+        cardPoints = 0;
+        for (let i = 0; i < tradeIns.length; i++){
+            cardPoints += tradeIns[i].stars;
+        }
+        if (cardPoints == 2){
+            unitPool += 2;
+        }
+        if (cardPoints == 3){
+            unitPool += 4;
+        }
+        if (cardPoints == 4){
+            unitPool += 7;
+        }
+        if (cardPoints == 5){
+            unitPool += 10;
+        }
+        if (cardPoints == 6){
+            unitPool += 13;
+        }
+        if (cardPoints == 7){
+            unitPool += 17;
+        }
+        if (cardPoints == 8){
+            unitPool += 21;
+        }
+        if (cardPoints == 9){
+            unitPool += 25;
+        }
+        if (cardPoints >= 10){
+            unitPool += 30;
+        }
+    }
+})
 function moveClick() {
     if (selectedRegion == null) {
         if (model.hoverRegion.team == currentPlayer.team) {
@@ -350,13 +385,13 @@ function init(card: Card) {
     } \
     else{ \
     $('#tradein').append($(this).attr('id')+', '); \
-    tradeIns[tradeIns.length] = $(this).attr('id'); \
+    tradeIns[tradeIns.length] = $(this); \
     }"
     return (clickString);
 }
 var index: number;
 var hasCard: boolean = false;
-var tradeIns: string[] = [];
+var tradeIns: Card[] = [];
 var players: Player[] = [];
 var currentPlayer: Player;
 var model: GameModel = new GameModel();
@@ -373,6 +408,7 @@ var unitPool: number = 0;
 var hasInit: boolean = false;
 var hasAll: boolean = true;
 var index1: number;
+var cardPoints: number = 0;
 $(() => {
     console.log('we were here');
     img = <HTMLImageElement>document.getElementById('riskmap');
