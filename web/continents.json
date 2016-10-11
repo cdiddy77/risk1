@@ -12,7 +12,8 @@
             "Central America",
             "Greenland"
         ],
-        "color": "yellow"
+        "color": "yellow",
+        "ownershipPoints": 5
     },
     {
         "name": "South America",
@@ -22,7 +23,8 @@
             "Peru",
             "Argentina"
         ],
-        "color": "orange"
+        "color": "orange",
+        "ownershipPoints": 2
     },
     {
         "name": "Africa",
@@ -34,7 +36,8 @@
             "South Africa",
             "Madagascar"
         ],
-        "color": "brown"
+        "color": "brown",
+        "ownershipPoints": 3
     },
     {
         "name": "Australia",
@@ -44,7 +47,8 @@
             "East Australia",
             "West Australia"
         ],
-        "color": "purple"
+        "color": "purple",
+        "ownershipPoints": 2
     },
     {
         "name": "Europe",
@@ -57,7 +61,8 @@
             "Russia",
             "Scandinavia"
         ],
-        "color": "blue"
+        "color": "blue",
+        "ownershipPoints": 5
     },
     {
         "name": "Asia",
@@ -75,7 +80,8 @@
             "Japan",
             "Kamchatka"
         ],
-        "color": "green"
+        "color": "green",
+        "ownershipPoints": 7
     }
     
 ]
