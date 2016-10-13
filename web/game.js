@@ -665,6 +665,10 @@ $.getJSON('continents.json', function (data) {
 var deck = [];
 function setup() {
     $('#attackButton').addClass('hidden');
+    $('#controls').addClass('hidden');
+    $('#threePlayers').addClass('hidden');
+    $('#fourPlayers').addClass('hidden');
+    $('#fivePlayers').addClass('hidden');
     for (var i = 0; i < model.allRegions.length; i++) {
         deck[i] = new Card(model.allRegions[i], model.allRegions[i].startingUnits);
     }
