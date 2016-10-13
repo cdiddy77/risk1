@@ -244,7 +244,6 @@ canvas.onmousedown = function (ev: MouseEvent) {
 
     }
     else if (currentPhase == 1) {
-        giveCard(currentPlayer);
         if (unitPool == 0) { $('#battleBox').text('nothing left to place'); }
         else if (model.hoverRegion == null) {
             $('#warning').removeClass('hidden');
@@ -689,7 +688,7 @@ function setup() {
             deck[i].region.team = players[i % players.length].team;
         }
         for (var i = 0; i < model.allRegions.length; i++) {
-            model.allRegions[i].currentUnits *= 5;
+            model.allRegions[i].currentUnits *= 1;
         }
         for (var i = deck.length - 1; i > 0; i--) {
             var index = Math.floor(Math.random() * i);
