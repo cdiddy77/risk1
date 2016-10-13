@@ -671,7 +671,7 @@ $.getJSON('continents.json', function (data) {
 var deck: Card[] = [];
 function setup() {
     $('#attackButton').addClass('hidden');
-
+    $('#controls').addClass('hidden');
 
     for (var i = 0; i < model.allRegions.length; i++) {
         deck[i] = new Card(model.allRegions[i], model.allRegions[i].startingUnits)
