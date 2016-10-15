@@ -61,12 +61,14 @@ var Player = (function () {
         this.hand = [];
     }
     Player.nextPlayer = function () {
+        $('#tradein').text('trade in: ');
         if (currentPlayer == null) {
             currentPlayer = players[0];
         }
         else if (currentPhase == 3) {
             if (currentPlayer.captured) {
                 giveCard(currentPlayer);
+                currentPlayer.captured = false;
             }
             currentPhase = 1;
             if (currentPlayer == players[players.length - 1]) {
@@ -79,6 +81,7 @@ var Player = (function () {
             currentPhase++;
         hasInit = false;
         $('#hand').html("<button id='hand' type='button' class='btn btn-primary'>my hand: </button>");
+        $('#hand').addClass('hidden');
         if (currentPhase == 1) {
             for (var i = 0; i < currentPlayer.hand.length; i++) {
                 $('#hand').append('<button id="' + currentPlayer.hand[i].region.name + '" class="btn btn-primary" onclick="'
@@ -86,6 +89,11 @@ var Player = (function () {
             }
         }
         if (currentPhase == 1) {
+            if (currentPlayer.hand.length > 0) {
+                $('#hand').addClass('hidden');
+            }
+            else
+                $('#hand').removeClass('hidden');
             actions.splice(0, actions.length);
             $('#undo').removeClass('hidden');
             if (hasInit == false) {
@@ -104,17 +112,14 @@ var Player = (function () {
                         for (var k = 0; k < model.allRegions.length; k++) {
                             if (model.allRegions[k].name == continents[i].territories[j]) {
                                 index = k;
-                                console.log(index);
                             }
                         }
                         if (model.allRegions[index].team != currentPlayer.team) {
                             hasAll = false;
-                            console.log('nope');
                         }
                     }
                     if (hasAll == true) {
                         unitPool += continents[i].ownershipPoints;
-                        console.log('aaaaa');
                     }
                 }
                 if (totalRegions >= 12 && totalRegions <= 14) {
@@ -251,7 +256,6 @@ canvas.onmousedown = function (ev) {
         if (model.hoverRegion != null) {
             if (model.hoverRegion.team != currentPlayer.team && selectedRegion == null) {
                 $('#warning').removeClass('hidden');
-                console.log('not yours');
             }
             if (selectedRegion != null || model.hoverRegion.team == currentPlayer.team) {
                 $('#warning').addClass('hidden');
@@ -275,7 +279,7 @@ $('#tradein').click(function (ev) {
             $('#hand').html("<button id='hand' type='button' class='btn btn-primary'>my hand: </button>");
             for (var i = 0; i < currentPlayer.hand.length; i++) {
                 if (tradeIns.indexOf(currentPlayer.hand[i]) >= 0) {
-                    currentPlayer.hand.splice(i, 1);
+                    currentPlayer.hand.splice(i, tradeIns.length);
                 }
                 else {
                     $('#hand').append('<button id="' + currentPlayer.hand[i].region.name + '" class="btn btn-primary" onclick="'
@@ -319,7 +323,6 @@ $('#tradein').click(function (ev) {
     $('#battleBox').text(currentPlayer.team + ', you have ' + unitPool + ' units to spend');
 });
 $('#tradein').mouseover(function (ev) {
-    console.log('hovering');
     $('#tradein').text('trade in: ');
     for (var i = 0; i < tradeIns.length; i++) {
         $('#tradein').append(tradeIns[i].region.name + ', ');
@@ -395,9 +398,7 @@ function moveClick() {
 }
 var selectedRegion = null;
 function attackClick(adjacent, startRegion) {
-    console.log('check2');
     if (selectedRegion == null) {
-        console.log('check3');
         if (model.hoverRegion.currentUnits > 1) {
             $('#battleBox').text(startRegion.name + ' is attacking with ' + (startRegion.currentUnits - 1) + ' unit(s)');
             selectedRegion = startRegion;
@@ -418,7 +419,6 @@ function attackClick(adjacent, startRegion) {
             $('#battleBox').text(startRegion.name + ' is attacking with ' + (attackUnits) + ' unit(s)');
         }
         else if (selectedRegion.adjacent.indexOf(model.hoverRegion.name) >= 0 && model.hoverRegion.team != selectedRegion.team) {
-            console.log('check4');
             $('#battleBox').text(selectedRegion.name + ' is attacking ' + model.hoverRegion.name +
                 ' with ' + (selectedRegion.currentUnits - 1) + ' unit(s)');
             if (attackUnits >= 3) {
@@ -448,7 +448,6 @@ $('#nextTurn').click(function (ev) {
     $('#warning').addClass('hidden');
 });
 $('#attackButton').click(function (ev) {
-    console.log('check5');
     var temp = 0;
     for (var i = 0; i < defenseDice; i++) {
         defenseRoll[i] = Math.floor(Math.random() * ((6 - 1) + 1) + 1);
@@ -532,7 +531,7 @@ function init(card) {
     }\
     for (let i = 0; i < tradeIns.length; i++) { \
     if (tradeIns[i].region.name == $(this).attr('id')) {\
-    currentPlayer.hand[currentPlayer.hand.length] = tradeIns[i];\
+    \
     tradeIns.splice(i, 1);\
     spliced = true;\
     $('#tradein').text('trade in: ');\
@@ -588,7 +587,6 @@ var index1;
 var cardPoints = 0;
 var actions = [];
 $(function () {
-    console.log('we were here');
     img = document.getElementById('riskmap');
     context.font = "bold 16px Arial";
     context.fillText('loading...', canvas.width / 2, canvas.height / 2);
@@ -664,6 +662,7 @@ $.getJSON('continents.json', function (data) {
 });
 var deck = [];
 function setup() {
+    $('#hand').addClass('hidden');
     $('#attackButton').addClass('hidden');
     $('#controls').addClass('hidden');
     $('#threePlayers').addClass('hidden');
