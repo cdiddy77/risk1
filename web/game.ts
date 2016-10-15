@@ -71,10 +71,13 @@ class Player {
     hand: Card[] = [];
     order: number;
     static nextPlayer() {
+        console.log('check');
+        console.log(currentPhase);
         $('#tradein').text('trade in: ');
         if (currentPlayer == null) {
             currentPlayer = players[0];
         }
+        if (currentPhase == -1){currentPhase = 0; unitPool == 0; currentPlayer = players[players.length - 1];}
         if (currentPhase == 0){
             if (currentPlayer == players[players.length - 1]) {
                 currentPlayer = players[0];
@@ -684,10 +687,14 @@ $.getJSON('continents.json', function (data) {
 });
 var deck: Card[] = [];
 function setup() {
+    var foo = document.getElementById('classic');
     $('#span').addClass('hidden');
-    if ($('#classic').val() == 'on'){
+    classic = false;
+    console.log($('#classic').is(':checked'));
+    if ($('#classic').is(':checked') == true){
         classic = true;
     }
+    console.log(classic);
     $('#hand').addClass('hidden');
     $('#attackButton').addClass('hidden');
     $('#controls').addClass('hidden');
@@ -715,7 +722,7 @@ function setup() {
         unitPool = 25;
     }
     $('#battleBox').text('select your regions');
-} else currentPhase = 1;
+}
     if (classic == false) {
         var temp: Card;
         for (var i = deck.length - 1; i > 0; i--) {
