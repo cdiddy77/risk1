@@ -109,7 +109,7 @@ class Player {
             }
         }
         if (currentPhase == 1) {
-            if (currentPlayer.hand.length > 0) {
+            if (currentPlayer.hand.length < 1) {
                 $('#hand').addClass('hidden');
             } else $('#hand').removeClass('hidden');
             actions.splice(0, actions.length);
