@@ -65,6 +65,16 @@ var Player = (function () {
         if (currentPlayer == null) {
             currentPlayer = players[0];
         }
+        if (currentPhase == 0) {
+            if (currentPlayer == players[players.length - 1]) {
+                currentPlayer = players[0];
+            }
+            else
+                currentPlayer = players[currentPlayer.order + 1];
+            if (unitPool == 0) {
+                currentPhase = 1;
+            }
+        }
         else if (currentPhase == 3) {
             if (currentPlayer.captured) {
                 giveCard(currentPlayer);
@@ -202,6 +212,7 @@ canvas.onmousedown = function (ev) {
             else if (model.hoverRegion != null) {
                 $('#warning').addClass('hidden');
                 model.hoverRegion.team = currentPlayer.team;
+                model.hoverRegion.currentUnits++;
             }
         }
         else {
@@ -662,6 +673,10 @@ $.getJSON('continents.json', function (data) {
 });
 var deck = [];
 function setup() {
+    $('#span').addClass('hidden');
+    if ($('#classic').val() == 'on') {
+        classic = true;
+    }
     $('#hand').addClass('hidden');
     $('#attackButton').addClass('hidden');
     $('#controls').addClass('hidden');
@@ -671,6 +686,26 @@ function setup() {
     for (var i = 0; i < model.allRegions.length; i++) {
         deck[i] = new Card(model.allRegions[i], model.allRegions[i].startingUnits);
     }
+    if (classic == true) {
+        for (var i_1 = 0; i_1 < model.allRegions.length; i_1++) {
+            model.allRegions[i_1].startingUnits = 0;
+            model.allRegions[i_1].currentUnits = 0;
+        }
+        currentPhase = 0;
+        currentPlayer = players[0];
+        if (players.length == 3) {
+            unitPool = 35;
+        }
+        if (players.length == 4) {
+            unitPool = 30;
+        }
+        if (players.length == 5) {
+            unitPool = 25;
+        }
+        $('#battleBox').text('select your regions');
+    }
+    else
+        currentPhase = 1;
     if (classic == false) {
         var temp;
         for (var i = deck.length - 1; i > 0; i--) {
@@ -691,24 +726,9 @@ function setup() {
             deck[i] = deck[index];
             deck[index] = temp;
         }
+        Player.nextPlayer();
     }
-    Player.nextPlayer();
 }
-if (classic == true) {
-    currentPhase = 0;
-    if (players.length == 3) {
-        unitPool = 3;
-    }
-    if (players.length == 4) {
-        unitPool = 30;
-    }
-    if (players.length == 5) {
-        unitPool = 25;
-    }
-    $('#battleBox').text('select your regions');
-}
-else
-    currentPhase = 1;
 function giveCard(to) {
     to.hand[to.hand.length] = deck[deck.length - 1];
     $('#hand').append('<button id="' + deck[deck.length - 1].region.name + '" class="btn btn-primary" onclick="'
