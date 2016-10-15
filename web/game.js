@@ -695,7 +695,7 @@ function setup() {
     }
     Player.nextPlayer();
 }
-if (classic == true) {
+if (classic != false) {
     currentPhase = 0;
     if (players.length == 3) {
         unitPool = 3;
