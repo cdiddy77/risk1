@@ -77,14 +77,14 @@ class Player {
         if (currentPlayer == null) {
             currentPlayer = players[0];
         }
-        if (currentPhase == -1){currentPhase = 0; unitPool == 0; currentPlayer = players[players.length - 1];}
-        if (currentPhase == 0){
+        if (currentPhase == -1) { currentPhase = 0; unitPool == 0; currentPlayer = players[players.length - 1]; }
+        if (currentPhase == 0) {
             if (currentPlayer == players[players.length - 1]) {
                 currentPlayer = players[0];
             } else currentPlayer = players[currentPlayer.order + 1];
             if (unitPool == 0) {
-            currentPhase = 1;
-        }
+                currentPhase = 1;
+            }
         }
         else if (currentPhase == 3) {
 
@@ -269,10 +269,13 @@ canvas.onmousedown = function (ev: MouseEvent) {
             $('#warning').removeClass('hidden');
         }
         else if (model.hoverRegion.team == currentPlayer.team) {
+            if (ev.which == 1) {
+                model.hoverRegion.currentUnits++;
+                actions[actions.length] = model.hoverRegion;
+                $('#warning').addClass('hidden');
+            }
             unitPool--;
-            model.hoverRegion.currentUnits++;
-            actions[actions.length] = model.hoverRegion;
-            $('#warning').addClass('hidden');
+
         }
 
         if (currentPhase == 1) {
@@ -293,7 +296,50 @@ canvas.onmousedown = function (ev: MouseEvent) {
         }
     }
     else if (currentPhase == 3) {
-        moveClick();
+        if (selectedRegion != null && model.hoverRegion == null){
+            selectedRegion.currentUnits += heldUnits;
+            heldUnits = 0;
+        }
+         else if (selectedRegion == null) {
+            if (model.hoverRegion.team == currentPlayer.team) {
+                selectedRegion = model.hoverRegion;
+                $('#warning').addClass('hidden');
+                if (ev.which == 1){
+                    GameRegion.take(selectedRegion);
+                }
+                if (ev.which == 3){
+                    heldUnits = selectedRegion.currentUnits - 1;
+                    selectedRegion.currentUnits = 1;
+                }
+            }
+            if (model.hoverRegion.team != currentPlayer.team) {
+                $('#warning').removeClass('hidden');
+            }
+        }
+        else if (selectedRegion != null) {
+            if (model.hoverRegion == selectedRegion) {
+                if (ev.which == 1){
+                    GameRegion.take(selectedRegion);
+                }
+                if (ev.which == 3){
+                    heldUnits = selectedRegion.currentUnits - 1;
+                    selectedRegion.currentUnits = 1;
+                }
+            }
+            else if (model.hoverRegion.team == currentPlayer.team) {
+                if (GameRegion.isAdjacent(model.hoverRegion, selectedRegion)) {
+                    model.hoverRegion.currentUnits += heldUnits;
+                    heldUnits = 0;
+                    selectedRegion = null;
+                } else {
+                    $('#warning').removeClass('hidden');
+                    selectedRegion = null;
+                }
+            } else {
+                $('#warning').removeClass('hidden');
+                selectedRegion = null;
+            }
+        }
     }
     queueRedraw();
 }
@@ -398,35 +444,7 @@ $('#tradein').mouseover(function (ev) {
 })
 
 function moveClick() {
-    if (selectedRegion == null) {
-        if (model.hoverRegion.team == currentPlayer.team) {
-            selectedRegion = model.hoverRegion;
-            $('#warning').addClass('hidden');
-            GameRegion.take(selectedRegion);
-        }
-        if (model.hoverRegion.team != currentPlayer.team) {
-            $('#warning').removeClass('hidden');
-        }
-    }
-    else if (selectedRegion != null) {
-        if (model.hoverRegion == selectedRegion) {
-            GameRegion.take(selectedRegion);
 
-        }
-        else if (model.hoverRegion.team == currentPlayer.team) {
-            if (GameRegion.isAdjacent(model.hoverRegion, selectedRegion)) {
-                model.hoverRegion.currentUnits += heldUnits;
-                heldUnits = 0;
-                selectedRegion = null;
-            } else {
-                $('#warning').removeClass('hidden');
-                selectedRegion = null;
-            }
-        } else {
-            $('#warning').removeClass('hidden');
-            selectedRegion = null;
-        }
-    }
 }
 var selectedRegion: GameRegion = null;
 function attackClick(adjacent: string[], startRegion: GameRegion) {
@@ -691,7 +709,7 @@ function setup() {
     $('#span').addClass('hidden');
     classic = false;
     console.log($('#classic').is(':checked'));
-    if ($('#classic').is(':checked') == true){
+    if ($('#classic').is(':checked') == true) {
         classic = true;
     }
     console.log(classic);
@@ -706,23 +724,23 @@ function setup() {
         deck[i] = new Card(model.allRegions[i], model.allRegions[i].startingUnits)
     }
     if (classic == true) {
-    for (let i = 0; i < model.allRegions.length; i++){
-        model.allRegions[i].startingUnits = 0;
-        model.allRegions[i].currentUnits = 0;
+        for (let i = 0; i < model.allRegions.length; i++) {
+            model.allRegions[i].startingUnits = 0;
+            model.allRegions[i].currentUnits = 0;
+        }
+        currentPhase = 0;
+        currentPlayer = players[0];
+        if (players.length == 3) {
+            unitPool = 35;
+        }
+        if (players.length == 4) {
+            unitPool = 30;
+        }
+        if (players.length == 5) {
+            unitPool = 25;
+        }
+        $('#battleBox').text('select your regions');
     }
-    currentPhase = 0;
-    currentPlayer = players[0];
-    if (players.length == 3) {
-        unitPool = 35;
-    }
-    if (players.length == 4) {
-        unitPool = 30;
-    }
-    if (players.length == 5) {
-        unitPool = 25;
-    }
-    $('#battleBox').text('select your regions');
-}
     if (classic == false) {
         var temp: Card;
         for (var i = deck.length - 1; i > 0; i--) {
@@ -745,7 +763,7 @@ function setup() {
         }
         Player.nextPlayer();
     }
-    
+
 }
 
 function giveCard(to: Player) {
