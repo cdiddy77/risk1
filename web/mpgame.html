@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>RISK</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+        crossorigin="anonymous">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp"
+        crossorigin="anonymous">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+        crossorigin="anonymous"></script>
+    <style>
+        #controls {
+            float: left;
+            margin-right: 10px;
+        }
+        
+        #canvasDiv {}
+        
+        #riskmap {
+            display: none;
+        }
+        
+        body {
+            padding: 10px;
+        }
+        
+        .std-margin {
+            margin: 10px;
+        }
+        .redBorder {
+            border:purple solid 5px;
+        }
+        .hidden>div {
+            display:none;
+        }
+        .visible>div {
+            display:block;
+        }
+    </style>
+</head>
+
+<body>
+    <div id='controls' class='panel panel-primary'>
+        <div class='panel-heading'>Start Game</div>
+        <div class='panel-body'>
+            <div class="std-margin">
+                <button id='threePlayers' type="button" class="btn btn-primary">Three Player Game</button>
+            </div>
+            <div class="std-margin">
+                <button id='fourPlayers' type="button" class="btn btn-primary">Four Player Game</button>
+            </div>
+            <div class="std-margin">
+                <button id='fivePlayers' type="button" class="btn btn-primary">Five Player Game</button>
+            </div>
+        </div>
+    </div>
+    <span id="span"><input id="classic" type="checkbox">classic mode?</span>
+    <div id='battleBox' class='container'>
+        <h1>BATTLE INFO</h1>
+        <p>battle info shows up here.</p>
+        
+    </div>
+    <button id="attackButton" type="button" class="btn btn-primary">attack!</button>
+    <button id="nextTurn" type="button" class="btn btn-primary">next phase</button>
+    <button id="hand" type="button" class="btn btn-primary">my hand</button>
+    <button id="tradein" type="button" class="btn btn-primary">trade in: </button>
+    <button id="undo" type="button" class="btn btn-primary">undo</button>
+    <div id='warning' class='alert alert-danger'>
+        <strong>you FOOL!</strong> invalid click.
+    </div>
+    <div id='canvasDiv'>
+        <canvas id='canvas' width="1354" height="850">
+        </canvas>
+    </div>
+    <script src="helpers.js"></script>
+    <script src="game.js"></script>
+
+    <img id='riskmap' src='images/riskmap.jpg'>
+</body>
+
+</html>

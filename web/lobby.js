@@ -108,6 +108,7 @@ function currentUserDisplayName() {
         return 'no-user';
     }
 }
+var fpdbRef;
 function beginQueryAvailableGames() {
     fpdbRef = firebase.database().ref();
     fpdbRef.child('games').orderByChild('hasStarted').equalTo("no").on('value', function (snapshot) {
@@ -121,12 +122,36 @@ function beginQueryAvailableGames() {
             newRow.append("<td>" + val.name + "</td>");
             newRow.append("<td>" + val.maxPlayers + "</td>");
             newRow.append("<td>" + val.players.map(function (v) { return v.userName; }).join(', ') + "</td>");
-            newRow.append("<td><a href='#' fbkey='" + key + "' class='joinCmd'>Join</a></td>");
+            if (val.players.some(function (v) {
+                return v.userName == currentUserDisplayName();
+            })) {
+                if (val.players[0].userName == currentUserDisplayName()) {
+                    newRow.append("<td><nobr>\
+                    <a href='#' fbkey='" + key + "' class='abandonCmd'>Abandon</a>" +
+                        "|<a href='#' fbkey='" + key + "' class='leaveCmd'>Leave</a>" +
+                        "|<a href='#' fbkey='" + key + "' class='startCmd'>Start</a></nobr></td>");
+                }
+                else {
+                    newRow.append("<td><a href='#' fbkey='" + key + "' class='leaveCmd'>Leave</a></td>");
+                }
+            }
+            else {
+                newRow.append("<td><a href='#' fbkey='" + key + "' class='joinCmd'>Join</a></td>");
+            }
             tbody.append(newRow);
             return false;
         });
         $('.joinCmd').click(function (ev) {
-            selectGame(ev.target.getAttribute('fbkey'));
+            joinGame(ev.target.getAttribute('fbkey'));
+        });
+        $('.leaveCmd').click(function (ev) {
+            leaveGame(ev.target.getAttribute('fbkey'));
+        });
+        $('.abandonCmd').click(function (ev) {
+            abandonGame(ev.target.getAttribute('fbkey'));
+        });
+        $('.startCmd').click(function (ev) {
+            startGame(ev.target.getAttribute('fbkey'));
         });
     });
 }
@@ -146,7 +171,77 @@ function handleCreateGame() {
         createGame(gameName);
     }
 }
-function selectGame(gameKey) {
-    console.log('selectGame', gameKey);
+function joinGame(gameKey) {
+    fpdbRef.child("games/" + gameKey + "/players").once('value', function (snapshot) {
+        var players = snapshot.val();
+        if (players.some(function (v, i, arr) {
+            return v.userName == currentUserDisplayName();
+        })) {
+            console.log('selectGame : already has player');
+        }
+        else {
+            console.log('selectGame: adding player');
+            players.push({
+                userName: currentUserDisplayName()
+            });
+            snapshot.ref.set(players);
+        }
+    });
+    fpdbRef.child("games/" + gameKey + "/hasStarted").on('value', function (snapshot) {
+        if (snapshot.val() == 'yes') {
+            localStorage['currentGame'] = gameKey;
+            window.location.href = 'mpgame.html';
+        }
+    });
+}
+function leaveGame(gameKey) {
+    console.log('leaveGame');
+    fpdbRef.child("games/" + gameKey + "/players").once('value', function (snapshot) {
+        var players = snapshot.val();
+        var thisPlayer = players.filter(function (v, i, arr) {
+            return v.userName == currentUserDisplayName();
+        });
+        if (thisPlayer.length > 0) {
+            console.log('selectGame :  has player');
+            var index_1 = players.indexOf(thisPlayer[0]);
+            if (index_1 >= 0) {
+                players.splice(index_1, 1);
+                snapshot.ref.set(players, function (err) {
+                    console.log('removeplayer completion', err);
+                });
+            }
+        }
+        else {
+            console.log('selectGame: doesnt have player');
+        }
+    });
+}
+function abandonGame(gameKey) {
+    console.log('abandonGame');
+    fpdbRef.child("games/" + gameKey).remove(function (err) {
+        console.log('remove completion', err);
+    });
+}
+function startGame(gameKey) {
+    console.log('startGame');
+    fpdbRef.child("games/" + gameKey).update({ status: 'started game', hasStarted: 'yes' }, function (err) {
+        console.log('start game', err);
+    });
+}
+function createGame(gameName) {
+    var game = {
+        name: gameName,
+        maxPlayers: 4,
+        hasStarted: "no",
+        status: 'looking for players.',
+        players: [
+            { userName: currentUserDisplayName(), color: 'red', hand: [] },
+        ],
+        regions: []
+    };
+    var gameKey = fpdbRef.child('games').push(game, function (err) {
+        console.log(err);
+    }).key;
+    joinGame(gameKey);
 }
 //# sourceMappingURL=lobby.js.map

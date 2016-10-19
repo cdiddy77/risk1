@@ -63,7 +63,6 @@ class Card {
         this.region = r;
         this.stars = s;
     }
-
 }
 class Player {
     captured: boolean = false;

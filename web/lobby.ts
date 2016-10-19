@@ -118,6 +118,8 @@ function currentUserDisplayName(): string {
     }
 }
 
+var fpdbRef: firebase.database.Reference;
+
 function beginQueryAvailableGames() {
     fpdbRef = firebase.database().ref();
     fpdbRef.child('games').orderByChild('hasStarted').equalTo("no").on('value', snapshot => {
@@ -132,12 +134,35 @@ function beginQueryAvailableGames() {
             newRow.append("<td>" + val.name + "</td>");
             newRow.append("<td>" + val.maxPlayers + "</td>");
             newRow.append("<td>" + val.players.map(v => v.userName).join(', ') + "</td>");
-            newRow.append("<td><a href='#' fbkey='" + key + "' class='joinCmd'>Join</a></td>");
+
+            if (val.players.some((v) => {
+                return v.userName == currentUserDisplayName();
+            })) {
+                if (val.players[0].userName == currentUserDisplayName()) {
+                    newRow.append("<td><nobr>\
+                    <a href='#' fbkey='" + key + "' class='abandonCmd'>Abandon</a>"+
+                    "|<a href='#' fbkey='" + key + "' class='leaveCmd'>Leave</a>"+
+                    "|<a href='#' fbkey='" + key + "' class='startCmd'>Start</a></nobr></td>");
+                } else {
+                    newRow.append("<td><a href='#' fbkey='" + key + "' class='leaveCmd'>Leave</a></td>");
+                }
+            } else {
+                newRow.append("<td><a href='#' fbkey='" + key + "' class='joinCmd'>Join</a></td>");
+            }
             tbody.append(newRow);
             return false;
         });
         $('.joinCmd').click(ev => {
-            selectGame(ev.target.getAttribute('fbkey'));
+            joinGame(ev.target.getAttribute('fbkey'));
+        });
+        $('.leaveCmd').click(ev => {
+            leaveGame(ev.target.getAttribute('fbkey'));
+        });
+        $('.abandonCmd').click(ev => {
+            abandonGame(ev.target.getAttribute('fbkey'));
+        });
+        $('.startCmd').click(ev => {
+            startGame(ev.target.getAttribute('fbkey'));
         });
     });
 
@@ -158,6 +183,80 @@ function handleCreateGame() {
         createGame(gameName);
     }
 }
-function selectGame(gameKey: string) {
-    console.log('selectGame', gameKey);
+function joinGame(gameKey: string) {
+    fpdbRef.child("games/" + gameKey + "/players").once('value', snapshot => {
+        let players: IPlayer[] = snapshot.val();
+        if (players.some((v, i, arr) => {
+            return v.userName == currentUserDisplayName();
+        })) {
+            console.log('selectGame : already has player');
+        } else {
+            console.log('selectGame: adding player');
+            players.push({
+                userName: currentUserDisplayName()
+            });
+            snapshot.ref.set(players);
+        }
+    });
+
+    fpdbRef.child("games/" + gameKey + "/hasStarted").on('value', snapshot => {
+        if (snapshot.val() == 'yes') {
+            localStorage['currentGame'] = gameKey;
+            window.location.href = 'mpgame.html';
+        }
+    });
+}
+
+function leaveGame(gameKey: string) {
+    console.log('leaveGame');
+    fpdbRef.child("games/" + gameKey + "/players").once('value', snapshot => {
+        let players: IPlayer[] = snapshot.val();
+        let thisPlayer = players.filter((v, i, arr) => {
+            return v.userName == currentUserDisplayName();
+        });
+        if (thisPlayer.length > 0) {
+            console.log('selectGame :  has player');
+            let index: number = players.indexOf(thisPlayer[0]);
+            if (index >= 0) {
+                players.splice(index, 1);
+                snapshot.ref.set(players, (err) => {
+                    console.log('removeplayer completion', err);
+                });
+            }
+        } else {
+            console.log('selectGame: doesnt have player');
+        }
+    });
+}
+
+function abandonGame(gameKey: string) {
+    console.log('abandonGame');
+    fpdbRef.child("games/" + gameKey).remove((err) => {
+        console.log('remove completion', err);
+    });
+}
+
+function startGame(gameKey: string) {
+    console.log('startGame');
+    fpdbRef.child("games/" + gameKey).update({ status: 'started game', hasStarted: 'yes' }, (err) => {
+        console.log('start game', err);
+    });
+}
+
+function createGame(gameName: string) {
+    var game: IGame = {
+        name: gameName,
+        maxPlayers: 4,
+        hasStarted: "no",
+        status: 'looking for players.',
+        players: [
+            { userName: currentUserDisplayName(), color: 'red', hand: [] },
+        ],
+        regions: []
+    };
+    var gameKey = fpdbRef.child('games').push(game, (err) => {
+        console.log(err);
+    }).key;
+
+    joinGame(gameKey);
 }
