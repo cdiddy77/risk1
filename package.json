@@ -8,9 +8,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@types/es6-promise": "0.0.32",
-    "@types/firebase": "^2.4.30",
     "@types/jquery": "^2.0.32",
+    "firebase": "^3.5.0",
     "jquery": "^3.1.0"
   },
   "repository": {

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Risk Game Lobby</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<!-- Latest compiled and minified CSS -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+		crossorigin="anonymous">
+
+	<!-- Optional theme -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp"
+		crossorigin="anonymous">
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+	<!-- Latest compiled and minified JavaScript -->
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+		crossorigin="anonymous"></script>
+	<script src="https://www.gstatic.com/firebasejs/3.5.0/firebase.js"></script>
+	<style>
+		.hidden {
+			display: none;
+		}
+	</style>
+</head>
+
+<body>
+
+	<script src="gamestate.js"></script>
+	<script src="lobby.js"></script>
+	<nav class="navbar navbar-inverse">
+		<div class="container-fluid">
+			<div class="navbar-header">
+				<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+        				<span class="icon-bar"></span>
+        				<span class="icon-bar"></span>
+        				<span class="icon-bar"></span>
+      				</button>
+				<a class="navbar-brand" href="#">Risk Lobby</a>
+			</div>
+
+			<div class="collapse navbar-collapse" id="myNavbar">
+				<ul class="nav navbar-nav navbar-right">
+					<li><a href="#" id='usernameSpan'></a></li>
+					<li><a href="#" id='signupLink' data-toggle="modal" data-target="#signupmodal"><span class="glyphicon glyphicon-user"></span> Sign Up</a></li>
+					<li><a href="#" id='loginLink' data-toggle="modal" data-target="#loginModal"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>
+					<li><a href="#" id='logoutLink'><span class="glyphicon glyphicon-log-out"></span> Logout</a></li>
+				</ul>
+			</div>
+		</div>
+	</nav>
+	<div id='root' class='container'>
+		<div class='row-fluid'>
+			<div id='col1' class='col-md-8 col-sm-8 panel panel-default'>
+				<div id='game-info' class="panel-body">
+					<h4>Current games</h4>
+					<table class="table table-striped table-bordered table-hover table-condensed">
+						<thead>
+							<tr>
+								<th>Name</th>
+								<th>Max players</th>
+								<th>Current</th>
+								<th>&nbsp;</th>
+							</tr>
+						</thead>
+						<tbody id='whereGameRowsGo'>
+							<!--<tr class="success">
+								<td>first</td>
+								<td>scond</td>
+								<td>third</td>
+							
+							</tr>
+							<tr class="danger">
+								<td>first</td>
+								<td>scond</td>
+								<td>third</td>
+							</tr>-->
+						</tbody>
+					</table>
+					<h4>Or, create a new game</h4>
+					<div id='gameNameFormGroup' class="form-group">
+						<div id='errorMsg'></div>
+						<label for="gameName">Game name</label>
+						<input type="text" class="form-control" id="gameName">
+					</div>
+					<button id='createGameBtn' type="submit" class="btn btn-default">Create Game</button>
+				</div>
+			</div>
+		</div>
+
+		<!-- Login Modal -->
+		<form action="#" id="loginForm">
+			<div class="modal fade" id="loginModal" tabindex="-1">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header">
+							<button type="button" class="close" data-dismiss="modal">&times;</button>
+							<h4 class="modal-title" id="loginModalLabel">Login</h4>
+						</div>
+						<div class="modal-body">
+							<div class="form-group" id="inputUserIDFormGroup">
+								<label class="control-label" for="inputUserID">User ID</label>
+								<input type="text" class="form-control" id="inputUserID" placeholder="Enter your user ID">
+							</div>
+							<div class="form-group" id="inputPasswordFormGroup">
+								<label class="control-label" for="inputPassword">Password</label>
+								<input type="password" class="form-control" id="inputPassword" placeholder="Enter your password">
+							</div>
+							<div id="placeForAlert"></div>
+						</div>
+						<div class="modal-footer">
+							<button id='createUserBtn' type="button" class="btn" data-dismiss='modal'>Register</button>
+							<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+							<button type="submit" class="btn btn-primary">Login</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</form>
+
+
+
+
+		<!-- Signup Modal -->
+		<form action="#" id='registerForm' method="post">
+			<div class="modal fade" id="signupmodal" role="dialog">
+				<div class="modal-dialog" role="document">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h4 class="modal-title">Signup to play Risk<span class="glyphicon glyphicon-user"></h4>
+					</div>
+					<div class="modal-body">
+					
+							<div class="row">
+								<div class="col-md-4 col-lg-4">
+									<div class="form-group">
+										<label for="regUserID">Name</label>
+										<input type="text" class="form-control" id="regUserID" placeholder="Enter username">
+									</div>
+								</div>
+							</div>
+
+							
+							<div class="row">
+								<div class="col-md-2 col-lg-2">
+									<div class="form-group">
+										<label for="regPassword">Password</label>
+										<input type="password" class="form-control" id="regPassword">
+									</div>
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-md-2 col-lg-2">
+									<div class="form-group">
+										<label for="regRepeatPassword"> Repeat Password</label>
+										<input type="password" class="form-control" id="regRepeatPassword">
+									</div>
+								</div>
+							</div>
+							<div class="row">
+									<div id="placeForRegisterAlert"></div>
+							</div>
+							<button type="submit" class="btn btn-primary">Submit</button>
+	
+					</div>
+				</div>
+			</div>
+		</div>
+					</form>
+</div>
+</body>
+
+</html>
