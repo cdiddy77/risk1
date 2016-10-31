@@ -487,6 +487,17 @@ var mpgame;
         GameKeeper.prototype.getPlayerOfRegion = function (r) {
             return this.getPlayer(this.game.regions[r.name].userName);
         };
+        // this routine updates
+        GameKeeper.prototype.updateServer = function () {
+            fbGameRef.set(this.game, function (err) {
+                if (err) {
+                    console.log('error updating gamestate', err);
+                }
+                else {
+                    console.log('successful game update');
+                }
+            });
+        };
         return GameKeeper;
     }());
     var gk = new GameKeeper();
@@ -609,14 +620,15 @@ var mpgame;
             window.location.href = 'lobby.html';
         console.log('determineWhichGame=', gameKey);
         fbGameRef = firebase.database().ref().child("games/" + gameKey);
-        fbGameRef.once('value', function (snap) {
-            var game = snap.val();
-            $('#gameNameGoesHere').text(game.name);
-            setupAllGameData(game);
+        fbGameRef.on('value', function (snap) {
+            gk.game = snap.val();
+            onGameChanged();
         });
     }
-    function setupAllGameData(game) {
-        // TODO : this gets called when we actually have the entire game for the first time on page load
+    // this is now the most important function. It is 
+    // called whenever the game changes. here you need to
+    // update all of the UI
+    function onGameChanged() {
     }
     var continents;
     $.getJSON('continents.json', function (data) {

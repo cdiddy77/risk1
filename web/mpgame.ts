@@ -491,6 +491,17 @@ namespace mpgame {
         getPlayerOfRegion(r: GameRegion): Player {
             return this.getPlayer(this.game.regions[r.name].userName);
         }
+
+        // this routine updates
+        updateServer() {
+            fbGameRef.set(this.game, err => {
+                if (err) {
+                    console.log('error updating gamestate', err);
+                } else {
+                    console.log('successful game update');
+                }
+            });
+        }
     }
 
 
@@ -628,15 +639,17 @@ namespace mpgame {
             window.location.href = 'lobby.html';
         console.log('determineWhichGame=', gameKey);
         fbGameRef = firebase.database().ref().child("games/" + gameKey);
-        fbGameRef.once('value', snap => {
-            var game: Game = snap.val();
-            $('#gameNameGoesHere').text(game.name);
-            setupAllGameData(game);
+        fbGameRef.on('value', snap => {
+            gk.game = snap.val();
+            onGameChanged();
         });
     }
 
-    function setupAllGameData(game: Game) {
-        // TODO : this gets called when we actually have the entire game for the first time on page load
+    // this is now the most important function. It is 
+    // called whenever the game changes. here you need to
+    // update all of the UI
+    function onGameChanged() {
+
     }
 
     var continents: IContinent[];
@@ -866,7 +879,7 @@ namespace mpgame {
             drawRegion(context, model.allRegions[i]);
             if (model.allRegions[i].unitCoords != null) {
                 context.fillStyle = gk.getPlayerOfRegion(model.allRegions[i]).color;
-                context.fillText(model.allRegions[i].name 
+                context.fillText(model.allRegions[i].name
                     + ' ' + gk.getCurrentUnits(model.allRegions[i]),
                     model.allRegions[i].unitCoords.x,
                     model.allRegions[i].unitCoords.y);
