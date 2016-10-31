@@ -1,9 +1,13 @@
 /// <reference path="../node_modules/@types/jquery/index.d.ts" />
+/// <reference path="../node_modules/firebase/firebase.d.ts" />
 var mpgame;
 (function (mpgame) {
     var canvas = document.getElementById('canvas');
     var context = canvas.getContext('2d');
     var img;
+    // firebase stuffs
+    var fpapp;
+    var fbGameRef;
     var GameModel = (function () {
         function GameModel() {
             this.allRegions = [];
@@ -17,14 +21,11 @@ var mpgame;
         function GameRegion(p, n, a, u, c) {
             this.adjacent = ["placeholder"];
             this.startingUnits = 1;
-            this.team = 'black';
-            this.currentUnits = 0;
             this.coords = p;
             this.name = n;
             this.adjacent = a;
             this.startingUnits = u;
             this.unitCoords = c;
-            this.currentUnits = u;
         }
         GameRegion.getRegion = function (name, all) {
             for (var i = 0; i < all.length; i++) {
@@ -50,142 +51,6 @@ var mpgame;
         };
         return GameRegion;
     }());
-    var Card = (function () {
-        function Card(r, s) {
-            this.region = r;
-            this.stars = s;
-        }
-        return Card;
-    }());
-    var Player = (function () {
-        function Player() {
-            this.captured = false;
-            this.hand = [];
-        }
-        Player.nextPlayer = function () {
-            console.log('check');
-            console.log(currentPhase);
-            $('#tradein').text('trade in: ');
-            if (currentPlayer == null) {
-                currentPlayer = players[0];
-            }
-            if (currentPhase == -1) {
-                currentPhase = 0;
-                unitPool == 0;
-                currentPlayer = players[players.length - 1];
-            }
-            if (currentPhase == 0) {
-                if (currentPlayer == players[players.length - 1]) {
-                    currentPlayer = players[0];
-                }
-                else
-                    currentPlayer = players[currentPlayer.order + 1];
-                if (unitPool == 0) {
-                    currentPhase = 1;
-                }
-            }
-            else if (currentPhase == 3) {
-                if (currentPlayer.captured) {
-                    giveCard(currentPlayer);
-                    currentPlayer.captured = false;
-                }
-                currentPhase = 1;
-                if (currentPlayer == players[players.length - 1]) {
-                    currentPlayer = players[0];
-                }
-                else
-                    currentPlayer = players[currentPlayer.order + 1];
-            }
-            else
-                currentPhase++;
-            hasInit = false;
-            $('#hand').html("<button id='hand' type='button' class='btn btn-primary'>my hand: </button>");
-            $('#hand').addClass('hidden');
-            if (currentPhase == 1) {
-                for (var i = 0; i < currentPlayer.hand.length; i++) {
-                    $('#hand').append('<button id="' + currentPlayer.hand[i].region.name + '" class="btn btn-primary" onclick="'
-                        + (init(deck[deck.length - 1])) + '">' + currentPlayer.hand[i].region.name + '</button>');
-                }
-            }
-            if (currentPhase == 1) {
-                if (currentPlayer.hand.length < 1) {
-                    $('#hand').addClass('hidden');
-                }
-                else
-                    $('#hand').removeClass('hidden');
-                actions.splice(0, actions.length);
-                $('#undo').removeClass('hidden');
-                if (hasInit == false) {
-                    unitPool = 3;
-                    var totalRegions;
-                    totalRegions = 0;
-                    for (var i = 0; i < model.allRegions.length; i++) {
-                        if (model.allRegions[i].team == currentPlayer.team) {
-                            totalRegions++;
-                        }
-                    }
-                    hasAll = true;
-                    for (var i = 0; i < continents.length; i++) {
-                        hasAll = true;
-                        for (var j = 0; j < continents[i].territories.length; j++) {
-                            for (var k = 0; k < model.allRegions.length; k++) {
-                                if (model.allRegions[k].name == continents[i].territories[j]) {
-                                    index = k;
-                                }
-                            }
-                            if (model.allRegions[index].team != currentPlayer.team) {
-                                hasAll = false;
-                            }
-                        }
-                        if (hasAll == true) {
-                            unitPool += continents[i].ownershipPoints;
-                        }
-                    }
-                    if (totalRegions >= 12 && totalRegions <= 14) {
-                        unitPool += 1;
-                    }
-                    if (totalRegions >= 15 && totalRegions <= 17) {
-                        unitPool += 2;
-                    }
-                    if (totalRegions >= 18 && totalRegions <= 20) {
-                        unitPool += 3;
-                    }
-                    if (totalRegions >= 21 && totalRegions <= 23) {
-                        unitPool += 4;
-                    }
-                    if (totalRegions >= 24 && totalRegions <= 26) {
-                        unitPool += 5;
-                    }
-                    if (totalRegions >= 27 && totalRegions <= 29) {
-                        unitPool += 6;
-                    }
-                    if (totalRegions >= 30 && totalRegions <= 32) {
-                        unitPool += 7;
-                    }
-                    if (totalRegions >= 33 && totalRegions <= 35) {
-                        unitPool += 8;
-                    }
-                    if (totalRegions >= 36 && totalRegions <= 39) {
-                        unitPool += 9;
-                    }
-                    if (totalRegions >= 40 && totalRegions <= 42) {
-                        unitPool += 10;
-                    }
-                    hasInit = true;
-                }
-                $('#battleBox').text(currentPlayer.team + ', you have ' + unitPool + ' units to spend');
-            }
-            if (currentPhase == 3) {
-                $('#undo').addClass('hidden');
-                $('#battleBox').text(currentPlayer.team + ', move your units');
-            }
-            if (currentPhase == 2 && selectedRegion == null) {
-                $('#battleBox').text(currentPlayer.team + ' is on the attack!');
-                $('#undo').addClass('hidden');
-            }
-        };
-        return Player;
-    }());
     var Continent = (function () {
         function Continent(n, r, p) {
             this.name = "";
@@ -202,10 +67,10 @@ var mpgame;
     $('#attackButton').addClass('hidden');
     $('#undo').click(function (ev) {
         if (actions.length > 0) {
-            actions[actions.length - 1].currentUnits--;
+            gk.changeCurrentUnits(actions[actions.length - 1], -1);
             unitPool++;
             actions.splice(actions.length - 1, 1);
-            $('#battleBox').text(currentPlayer.team + ', you have ' + unitPool + ' units to spend');
+            $('#battleBox').text(currentPlayer().userName + ', you have ' + unitPool + ' units to spend');
             queueRedraw();
         }
         else
@@ -215,38 +80,38 @@ var mpgame;
     canvas.onmousedown = function (ev) {
         if (currentPhase == 0) {
             if (round == 1) {
-                if (model.hoverRegion == null || model.hoverRegion.team != 'black') {
+                if (model.hoverRegion == null || gk.getCurrentTeam(model.hoverRegion) != null) {
                     $('#warning').removeClass('hidden');
                 }
                 else if (model.hoverRegion != null) {
                     $('#warning').addClass('hidden');
-                    model.hoverRegion.team = currentPlayer.team;
-                    model.hoverRegion.currentUnits++;
+                    gk.setCurrentTeam(model.hoverRegion, currentPlayer().userName);
+                    gk.changeCurrentUnits(model.hoverRegion, 1);
                 }
             }
             else {
                 if (model.hoverRegion == null) {
                     $('#warning').removeClass('hidden');
                 }
-                if (model.hoverRegion.team != currentPlayer.team) {
+                if (gk.getCurrentTeam(model.hoverRegion) != currentPlayer().userName) {
                     $('#warning').removeClass('hidden');
                 }
-                if (model.hoverRegion.team == currentPlayer.team) {
+                if (gk.getCurrentTeam(model.hoverRegion) == currentPlayer().userName) {
                     $('#warning').addClass('hidden');
-                    model.hoverRegion.currentUnits++;
+                    gk.changeCurrentUnits(model.hoverRegion, 1);
                 }
             }
-            if (currentPlayer.order == players.length - 1 && turn != 1) {
+            if (currentPlayer().order == players.length - 1 && turn != 1) {
                 unitPool--;
             }
-            if (currentPlayer == players[players.length - 1]) {
+            if (currentPlayerIndex == players.length - 1) {
                 if (turn == 42) {
                     round++;
                 }
             }
             if (model.hoverRegion != null && $('#warning').hasClass('hidden')) {
                 turn += 1;
-                Player.nextPlayer();
+                nextPlayer();
             }
             if (unitPool == 0) {
                 currentPhase = 1;
@@ -259,25 +124,25 @@ var mpgame;
             else if (model.hoverRegion == null) {
                 $('#warning').removeClass('hidden');
             }
-            else if (model.hoverRegion.team != currentPlayer.team) {
+            else if (gk.getCurrentTeam(model.hoverRegion) != currentPlayer().userName) {
                 $('#warning').removeClass('hidden');
             }
-            else if (model.hoverRegion.team == currentPlayer.team) {
+            else if (gk.getCurrentTeam(model.hoverRegion) == currentPlayer().userName) {
                 unitPool--;
-                model.hoverRegion.currentUnits++;
+                gk.changeCurrentUnits(model.hoverRegion, 1);
                 actions[actions.length] = model.hoverRegion;
                 $('#warning').addClass('hidden');
             }
             if (currentPhase == 1) {
-                $('#battleBox').text(currentPlayer.team + ', you have ' + unitPool + ' units to spend');
+                $('#battleBox').text(currentPlayer().userName + ', you have ' + unitPool + ' units to spend');
             }
         }
         else if (currentPhase == 2) {
             if (model.hoverRegion != null) {
-                if (model.hoverRegion.team != currentPlayer.team && selectedRegion == null) {
+                if (gk.getCurrentTeam(model.hoverRegion) != currentPlayer().userName && selectedRegion == null) {
                     $('#warning').removeClass('hidden');
                 }
-                if (selectedRegion != null || model.hoverRegion.team == currentPlayer.team) {
+                if (selectedRegion != null || gk.getCurrentTeam(model.hoverRegion) == currentPlayer().userName) {
                     $('#warning').addClass('hidden');
                     attackClick(model.hoverRegion.adjacent, model.hoverRegion);
                 }
@@ -297,13 +162,13 @@ var mpgame;
             }
             if (cardPoints > 1) {
                 $('#hand').html("<button id='hand' type='button' class='btn btn-primary'>my hand: </button>");
-                for (var i = 0; i < currentPlayer.hand.length; i++) {
-                    if (tradeIns.indexOf(currentPlayer.hand[i]) >= 0) {
-                        currentPlayer.hand.splice(i, tradeIns.length);
+                for (var i = 0; i < currentPlayer().hand.length; i++) {
+                    if (tradeIns.indexOf(currentPlayer().hand[i]) >= 0) {
+                        currentPlayer().hand.splice(i, tradeIns.length);
                     }
                     else {
-                        $('#hand').append('<button id="' + currentPlayer.hand[i].region.name + '" class="btn btn-primary" onclick="'
-                            + (init(currentPlayer.hand[i])) + '">' + currentPlayer.hand[i].region.name + '</button>');
+                        $('#hand').append('<button id="' + currentPlayer().hand[i].regionName + '" class="btn btn-primary" onclick="'
+                            + (init(currentPlayer().hand[i])) + '">' + currentPlayer().hand[i].regionName + '</button>');
                     }
                 }
                 if (cardPoints == 2) {
@@ -336,16 +201,16 @@ var mpgame;
                 tradeIns.splice(0, tradeIns.length);
                 $('#tradein').text('trade in: ');
                 for (var i = 0; i < tradeIns.length; i++) {
-                    $('#tradein').append(tradeIns[i].region.name + ', ');
+                    $('#tradein').append(tradeIns[i].regionName + ', ');
                 }
             }
         }
-        $('#battleBox').text(currentPlayer.team + ', you have ' + unitPool + ' units to spend');
+        $('#battleBox').text(currentPlayer().userName + ', you have ' + unitPool + ' units to spend');
     });
     $('#tradein').mouseover(function (ev) {
         $('#tradein').text('trade in: ');
         for (var i = 0; i < tradeIns.length; i++) {
-            $('#tradein').append(tradeIns[i].region.name + ', ');
+            $('#tradein').append(tradeIns[i].regionName + ', ');
         }
         if (currentPhase == 1) {
             cardPoints = 0;
@@ -386,22 +251,22 @@ var mpgame;
     });
     function moveClick() {
         if (selectedRegion == null) {
-            if (model.hoverRegion.team == currentPlayer.team) {
+            if (gk.getCurrentTeam(model.hoverRegion) == currentPlayer().userName) {
                 selectedRegion = model.hoverRegion;
                 $('#warning').addClass('hidden');
-                GameRegion.take(selectedRegion);
+                GameRegion.take(gk.getOwnership(selectedRegion));
             }
-            if (model.hoverRegion.team != currentPlayer.team) {
+            if (gk.getCurrentTeam(model.hoverRegion) != currentPlayer().userName) {
                 $('#warning').removeClass('hidden');
             }
         }
         else if (selectedRegion != null) {
             if (model.hoverRegion == selectedRegion) {
-                GameRegion.take(selectedRegion);
+                GameRegion.take(gk.getOwnership(selectedRegion));
             }
-            else if (model.hoverRegion.team == currentPlayer.team) {
+            else if (gk.getCurrentTeam(model.hoverRegion) == currentPlayer().userName) {
                 if (GameRegion.isAdjacent(model.hoverRegion, selectedRegion)) {
-                    model.hoverRegion.currentUnits += heldUnits;
+                    gk.changeCurrentUnits(model.hoverRegion, heldUnits);
                     heldUnits = 0;
                     selectedRegion = null;
                 }
@@ -419,10 +284,10 @@ var mpgame;
     var selectedRegion = null;
     function attackClick(adjacent, startRegion) {
         if (selectedRegion == null) {
-            if (model.hoverRegion.currentUnits > 1) {
-                $('#battleBox').text(startRegion.name + ' is attacking with ' + (startRegion.currentUnits - 1) + ' unit(s)');
+            if (gk.getCurrentUnits(model.hoverRegion) > 1) {
+                $('#battleBox').text(startRegion.name + ' is attacking with ' + (gk.getCurrentUnits(startRegion) - 1) + ' unit(s)');
                 selectedRegion = startRegion;
-                attackUnits = selectedRegion.currentUnits - 1;
+                attackUnits = gk.getCurrentUnits(selectedRegion) - 1;
             }
             else {
                 $('#battleBox').text('not enough units to attack!');
@@ -431,26 +296,27 @@ var mpgame;
         }
         else if (selectedRegion != null) {
             if (model.hoverRegion == selectedRegion) {
-                if (attackUnits == selectedRegion.currentUnits - 1) {
+                if (attackUnits == gk.getCurrentUnits(selectedRegion) - 1) {
                     attackUnits = 1;
                 }
                 else
                     attackUnits++;
                 $('#battleBox').text(startRegion.name + ' is attacking with ' + (attackUnits) + ' unit(s)');
             }
-            else if (selectedRegion.adjacent.indexOf(model.hoverRegion.name) >= 0 && model.hoverRegion.team != selectedRegion.team) {
+            else if (selectedRegion.adjacent.indexOf(model.hoverRegion.name) >= 0
+                && gk.getCurrentTeam(model.hoverRegion) != gk.getCurrentTeam(selectedRegion)) {
                 $('#battleBox').text(selectedRegion.name + ' is attacking ' + model.hoverRegion.name +
-                    ' with ' + (selectedRegion.currentUnits - 1) + ' unit(s)');
+                    ' with ' + (gk.getCurrentUnits(selectedRegion) - 1) + ' unit(s)');
                 if (attackUnits >= 3) {
                     attackDice = 3;
                 }
                 else
                     attackDice = attackUnits;
-                if (model.hoverRegion.currentUnits >= 2) {
+                if (gk.getCurrentUnits(model.hoverRegion) >= 2) {
                     defenseDice = 2;
                 }
                 else
-                    defenseDice = model.hoverRegion.currentUnits;
+                    defenseDice = gk.getCurrentUnits(model.hoverRegion);
                 attackRegion = selectedRegion;
                 defenseRegion = model.hoverRegion;
                 $('#attackButton').removeClass('hidden');
@@ -461,10 +327,16 @@ var mpgame;
             }
         }
     }
+    function currentPlayer() {
+        if (currentPlayerIndex == -1)
+            return null;
+        else
+            return players[currentPlayerIndex];
+    }
     var attackRegion;
     var defenseRegion;
     $('#nextTurn').click(function (ev) {
-        Player.nextPlayer();
+        nextPlayer();
         $('#warning').addClass('hidden');
     });
     $('#attackButton').click(function (ev) {
@@ -494,47 +366,47 @@ var mpgame;
         }
         if (attackDice > 1 && defenseDice > 1) {
             if (attackRoll[0] > defenseRoll[0]) {
-                defenseRegion.currentUnits--;
+                gk.changeCurrentUnits(defenseRegion, -1);
             }
             else
-                attackRegion.currentUnits--;
+                gk.changeCurrentUnits(attackRegion, -1);
             if (attackRoll[1] > defenseRoll[1]) {
-                defenseRegion.currentUnits--;
+                gk.changeCurrentUnits(defenseRegion, -1);
             }
             else
-                attackRegion.currentUnits--;
+                gk.changeCurrentUnits(attackRegion, -1);
         }
         else {
             if (attackRoll[0] > defenseRoll[0]) {
-                defenseRegion.currentUnits--;
+                gk.changeCurrentUnits(defenseRegion, -1);
             }
             else
-                attackRegion.currentUnits--;
+                gk.changeCurrentUnits(attackRegion, -1);
         }
-        if (attackRegion.currentUnits >= 3) {
+        if (gk.getCurrentUnits(attackRegion) >= 3) {
             attackDice = 3;
         }
         else
-            attackDice = attackRegion.currentUnits - 1;
-        if (defenseRegion.currentUnits >= 2) {
+            attackDice = gk.getCurrentUnits(attackRegion) - 1;
+        if (gk.getCurrentUnits(defenseRegion) >= 2) {
             defenseDice = 2;
         }
         else
-            defenseDice = defenseRegion.currentUnits;
+            defenseDice = gk.getCurrentUnits(defenseRegion);
         $('#battleBox').text(attackRegion.name + ' rolls ' + attackRoll + ' and '
             + defenseRegion.name + ' rolls ' + defenseRoll);
-        if (attackRegion.currentUnits < 2) {
+        if (gk.getCurrentUnits(attackRegion) < 2) {
             $('#attackButton').addClass('hidden');
             $('#battleBox').text('not enought units to continue attacking!');
             selectedRegion = null;
         }
-        if (defenseRegion.currentUnits == 0) {
-            defenseRegion.team = currentPlayer.team;
-            defenseRegion.currentUnits = attackRegion.currentUnits - 1;
-            attackRegion.currentUnits = 1;
+        if (gk.getCurrentUnits(defenseRegion) == 0) {
+            gk.setCurrentTeam(defenseRegion, currentPlayer().userName);
+            gk.setCurrentUnits(defenseRegion, gk.getCurrentUnits(attackRegion) - 1);
+            gk.setCurrentUnits(attackRegion, 1);
             $('#attackButton').addClass('hidden');
-            $('#battleBox').text('huzzah! ' + currentPlayer.team + ' takes ' + defenseRegion.name);
-            currentPlayer.captured = true;
+            $('#battleBox').text('huzzah! ' + currentPlayer().userName + ' takes ' + defenseRegion.name);
+            currentPlayer().captured = true;
             selectedRegion = null;
         }
         queueRedraw();
@@ -583,13 +455,48 @@ var mpgame;
     }";
         return (clickString);
     }
+    // this class is a convenient place to put functionality
+    var GameKeeper = (function () {
+        function GameKeeper() {
+        }
+        GameKeeper.prototype.changeCurrentUnits = function (r, delta) {
+            this.game.regions[r.name].currentUnits += delta;
+        };
+        GameKeeper.prototype.getCurrentUnits = function (r) {
+            return this.game.regions[r.name].currentUnits;
+        };
+        GameKeeper.prototype.setCurrentUnits = function (r, units) {
+            this.game.regions[r.name].currentUnits = units;
+        };
+        GameKeeper.prototype.setCurrentTeam = function (r, userName) {
+            this.game.regions[r.name].userName = userName;
+        };
+        GameKeeper.prototype.getCurrentTeam = function (r) {
+            return this.game.regions[r.name].userName;
+        };
+        GameKeeper.prototype.getOwnership = function (r) {
+            return this.game.regions[r.name];
+        };
+        GameKeeper.prototype.getPlayer = function (userName) {
+            for (var i = 0; i < this.game.players.length; i++) {
+                if (this.game.players[i].userName == userName)
+                    return this.game.players[i];
+            }
+            return null;
+        };
+        GameKeeper.prototype.getPlayerOfRegion = function (r) {
+            return this.getPlayer(this.game.regions[r.name].userName);
+        };
+        return GameKeeper;
+    }());
+    var gk = new GameKeeper();
     //$('#battleBox').text;
     var spliced;
     var index;
     var hasCard = false;
     var tradeIns = [];
     var players = [];
-    var currentPlayer;
+    var currentPlayerIndex = -1;
     var model = new GameModel();
     var heldUnits = 0;
     var attackDice = 0;
@@ -623,7 +530,6 @@ var mpgame;
             else {
                 window.location.href = 'lobby.html';
             }
-            showHideAuthButtons();
         });
         img = document.getElementById('riskmap');
         context.font = "bold 16px Arial";
@@ -631,6 +537,7 @@ var mpgame;
         setTimeout(function () {
             queueRedraw();
         }, 1000);
+        // load up the current game
         canvas.onmousemove = function (ev) {
             var pt = Point.parse(ev);
             if (model.activeDrawRegion != null) {
@@ -641,14 +548,15 @@ var mpgame;
                 doHittest(pt);
             }
         };
+        // TODO : move this ordering code to lobby.html so by the time we get in here, the game is set up and ready to go
         $('#threePlayers').click(function (ev) {
             players.length = 3;
             for (var i = 0; i < 3; i++) {
-                players[i] = new Player;
+                players[i] = gamestate.newPlayer();
             }
-            players[0].team = "red";
-            players[1].team = "cornflowerblue";
-            players[2].team = "green";
+            players[0].userName = "red";
+            players[1].userName = "cornflowerblue";
+            players[2].userName = "green";
             players[0].order = 0;
             players[1].order = 1;
             players[2].order = 2;
@@ -658,12 +566,12 @@ var mpgame;
         $('#fourPlayers').click(function (ev) {
             players.length = 4;
             for (var i = 0; i < 4; i++) {
-                players[i] = new Player;
+                players[i] = gamestate.newPlayer();
             }
-            players[0].team = "red";
-            players[1].team = "cornflowerblue";
-            players[2].team = "green";
-            players[3].team = "yellow";
+            players[0].userName = "red";
+            players[1].userName = "cornflowerblue";
+            players[2].userName = "green";
+            players[3].userName = "yellow";
             players[0].order = 0;
             players[1].order = 1;
             players[2].order = 2;
@@ -674,13 +582,13 @@ var mpgame;
         $('#fivePlayers').click(function (ev) {
             players.length = 5;
             for (var i = 0; i < 5; i++) {
-                players[i] = new Player;
+                players[i] = gamestate.newPlayer();
             }
-            players[0].team = "red";
-            players[1].team = "cornflowerblue";
-            players[2].team = "green";
-            players[3].team = "yellow";
-            players[4].team = "black";
+            players[0].userName = "red";
+            players[1].userName = "cornflowerblue";
+            players[2].userName = "green";
+            players[3].userName = "yellow";
+            players[4].userName = "black";
             players[0].order = 0;
             players[1].order = 1;
             players[2].order = 2;
@@ -696,15 +604,28 @@ var mpgame;
     });
     var gameKey;
     function determineWhichGame() {
-        gameKey = localStorage['gameKey'];
+        gameKey = localStorage['currentGame'];
+        if (!gameKey)
+            window.location.href = 'lobby.html';
         console.log('determineWhichGame=', gameKey);
+        fbGameRef = firebase.database().ref().child("games/" + gameKey);
+        fbGameRef.once('value', function (snap) {
+            var game = snap.val();
+            $('#gameNameGoesHere').text(game.name);
+            setupAllGameData(game);
+        });
+    }
+    function setupAllGameData(game) {
+        // TODO : this gets called when we actually have the entire game for the first time on page load
     }
     var continents;
     $.getJSON('continents.json', function (data) {
         continents = data;
     });
-    var deck = [];
+    /// This routine gets called to really configure everything
+    // TODO : move this to lobby.ts ?
     function setup() {
+        // TODO : need to make sure we update the firebase with changes we make in this routine
         var foo = document.getElementById('classic');
         $('#span').addClass('hidden');
         classic = false;
@@ -720,15 +641,15 @@ var mpgame;
         $('#fourPlayers').addClass('hidden');
         $('#fivePlayers').addClass('hidden');
         for (var i = 0; i < model.allRegions.length; i++) {
-            deck[i] = new Card(model.allRegions[i], model.allRegions[i].startingUnits);
+            gk.game.deck[i] = gamestate.newCard(model.allRegions[i].name, model.allRegions[i].startingUnits);
         }
         if (classic == true) {
             for (var i_1 = 0; i_1 < model.allRegions.length; i_1++) {
                 model.allRegions[i_1].startingUnits = 0;
-                model.allRegions[i_1].currentUnits = 0;
+                gk.setCurrentUnits(model.allRegions[i_1], 0);
             }
             currentPhase = 0;
-            currentPlayer = players[0];
+            currentPlayerIndex = 0;
             if (players.length == 3) {
                 unitPool = 35;
             }
@@ -742,32 +663,154 @@ var mpgame;
         }
         if (classic == false) {
             var temp;
-            for (var i = deck.length - 1; i > 0; i--) {
+            for (var i = gk.game.deck.length - 1; i > 0; i--) {
                 var index = Math.floor(Math.random() * i);
-                temp = deck[i];
-                deck[i] = deck[index];
-                deck[index] = temp;
+                temp = gk.game.deck[i];
+                gk.game.deck[i] = gk.game.deck[index];
+                gk.game.deck[index] = temp;
             }
-            for (var i = 0; i < deck.length; i++) {
-                deck[i].region.team = players[i % players.length].team;
+            for (var i = 0; i < gk.game.deck.length; i++) {
+                gk.game.deck[i].regionName = players[i % players.length].userName;
             }
-            for (var i = 0; i < model.allRegions.length; i++) {
-                model.allRegions[i].currentUnits *= 1;
-            }
-            for (var i = deck.length - 1; i > 0; i--) {
+            for (var i = gk.game.deck.length - 1; i > 0; i--) {
                 var index = Math.floor(Math.random() * i);
-                temp = deck[i];
-                deck[i] = deck[index];
-                deck[index] = temp;
+                temp = gk.game.deck[i];
+                gk.game.deck[i] = gk.game.deck[index];
+                gk.game.deck[index] = temp;
             }
-            Player.nextPlayer();
+            nextPlayer();
+        }
+    }
+    function nextPlayer() {
+        // TODO : need to make sure we update the firebase at the end of this routine
+        console.log('check');
+        console.log(currentPhase);
+        $('#tradein').text('trade in: ');
+        if (currentPlayerIndex == -1) {
+            currentPlayerIndex = 0;
+        }
+        if (currentPhase == -1) {
+            currentPhase = 0;
+            unitPool == 0;
+            currentPlayerIndex = players.length - 1;
+        }
+        if (currentPhase == 0) {
+            if (currentPlayerIndex == players.length - 1) {
+                currentPlayerIndex = 0;
+            }
+            else
+                currentPlayerIndex = currentPlayer().order + 1;
+            if (unitPool == 0) {
+                currentPhase = 1;
+            }
+        }
+        else if (currentPhase == 3) {
+            if (currentPlayer().captured) {
+                giveCard(currentPlayer());
+                currentPlayer().captured = false;
+            }
+            currentPhase = 1;
+            if (currentPlayerIndex == players.length - 1) {
+                currentPlayerIndex = 0;
+            }
+            else
+                currentPlayerIndex = currentPlayer().order + 1;
+        }
+        else
+            currentPhase++;
+        hasInit = false;
+        $('#hand').html("<button id='hand' type='button' class='btn btn-primary'>my hand: </button>");
+        $('#hand').addClass('hidden');
+        if (currentPhase == 1) {
+            for (var i = 0; i < currentPlayer().hand.length; i++) {
+                $('#hand').append('<button id="' + currentPlayer().hand[i].regionName + '" class="btn btn-primary" onclick="'
+                    + (init(gk.game.deck[gk.game.deck.length - 1])) + '">' + currentPlayer().hand[i].regionName + '</button>');
+            }
+        }
+        if (currentPhase == 1) {
+            if (currentPlayer().hand.length < 1) {
+                $('#hand').addClass('hidden');
+            }
+            else
+                $('#hand').removeClass('hidden');
+            actions.splice(0, actions.length);
+            $('#undo').removeClass('hidden');
+            if (hasInit == false) {
+                unitPool = 3;
+                var totalRegions;
+                totalRegions = 0;
+                for (var i = 0; i < model.allRegions.length; i++) {
+                    if (gk.getCurrentTeam(model.allRegions[i]) == currentPlayer().userName) {
+                        totalRegions++;
+                    }
+                }
+                hasAll = true;
+                for (var i = 0; i < continents.length; i++) {
+                    hasAll = true;
+                    for (var j = 0; j < continents[i].territories.length; j++) {
+                        for (var k = 0; k < model.allRegions.length; k++) {
+                            if (model.allRegions[k].name == continents[i].territories[j]) {
+                                index = k;
+                            }
+                        }
+                        if (gk.getCurrentTeam(model.allRegions[index]) != currentPlayer().userName) {
+                            hasAll = false;
+                        }
+                    }
+                    if (hasAll == true) {
+                        unitPool += continents[i].ownershipPoints;
+                    }
+                }
+                if (totalRegions >= 12 && totalRegions <= 14) {
+                    unitPool += 1;
+                }
+                if (totalRegions >= 15 && totalRegions <= 17) {
+                    unitPool += 2;
+                }
+                if (totalRegions >= 18 && totalRegions <= 20) {
+                    unitPool += 3;
+                }
+                if (totalRegions >= 21 && totalRegions <= 23) {
+                    unitPool += 4;
+                }
+                if (totalRegions >= 24 && totalRegions <= 26) {
+                    unitPool += 5;
+                }
+                if (totalRegions >= 27 && totalRegions <= 29) {
+                    unitPool += 6;
+                }
+                if (totalRegions >= 30 && totalRegions <= 32) {
+                    unitPool += 7;
+                }
+                if (totalRegions >= 33 && totalRegions <= 35) {
+                    unitPool += 8;
+                }
+                if (totalRegions >= 36 && totalRegions <= 39) {
+                    unitPool += 9;
+                }
+                if (totalRegions >= 40 && totalRegions <= 42) {
+                    unitPool += 10;
+                }
+                hasInit = true;
+            }
+            $('#battleBox').text(currentPlayer().userName + ', you have ' + unitPool + ' units to spend');
+        }
+        if (currentPhase == 3) {
+            $('#undo').addClass('hidden');
+            $('#battleBox').text(currentPlayer().userName + ', move your units');
+        }
+        if (currentPhase == 2 && selectedRegion == null) {
+            $('#battleBox').text(currentPlayer().userName + ' is on the attack!');
+            $('#undo').addClass('hidden');
         }
     }
     function giveCard(to) {
-        to.hand[to.hand.length] = deck[deck.length - 1];
-        $('#hand').append('<button id="' + deck[deck.length - 1].region.name + '" class="btn btn-primary" onclick="'
-            + (init(deck[deck.length - 1])) + '">' + deck[deck.length - 1].region.name + '</button>');
-        deck.splice(deck.length - 1, 1);
+        // TODO : need to make sure we update the firebase
+        to.hand[to.hand.length] = gk.game.deck[gk.game.deck.length - 1];
+        var newButtonId = gk.game.deck[gk.game.deck.length - 1].regionName;
+        $('#hand').append('<button id="' + newButtonId + '" class="btn btn-primary" onclick="'
+            + (init(gk.game.deck[gk.game.deck.length - 1])) + '">' + gk.game.deck[gk.game.deck.length - 1].regionName + '</button>');
+        gk.game.deck.splice(gk.game.deck.length - 1, 1);
     }
     function doHittest(pt) {
         var originalHoverRegion = model.hoverRegion;
@@ -792,8 +835,9 @@ var mpgame;
         for (var i = 0; i < model.allRegions.length; i++) {
             drawRegion(context, model.allRegions[i]);
             if (model.allRegions[i].unitCoords != null) {
-                context.fillStyle = model.allRegions[i].team;
-                context.fillText(model.allRegions[i].name + ' ' + model.allRegions[i].currentUnits, model.allRegions[i].unitCoords.x, model.allRegions[i].unitCoords.y);
+                context.fillStyle = gk.getPlayerOfRegion(model.allRegions[i]).color;
+                context.fillText(model.allRegions[i].name
+                    + ' ' + gk.getCurrentUnits(model.allRegions[i]), model.allRegions[i].unitCoords.x, model.allRegions[i].unitCoords.y);
             }
         }
         if (model.activeDrawRegion != null) {
