@@ -156,7 +156,10 @@ var lobby;
                 abandonGame(ev.target.getAttribute('fbkey'));
             });
             $('.startCmd').click(function (ev) {
-                startGame(ev.target.getAttribute('fbkey'));
+                startGame(ev.target.getAttribute('fbkey'), 'normal');
+            });
+            $('.startClassicCmd').click(function (ev) {
+                startGame(ev.target.getAttribute('fbkey'), 'classic');
             });
         });
     }
@@ -190,8 +193,8 @@ var lobby;
                 snapshot.ref.set(players);
             }
         });
-        fpdbRef.child("games/" + gameKey + "/hasStarted").on('value', function (snapshot) {
-            if (snapshot.val() == 'yes') {
+        fpdbRef.child("games/" + gameKey + "/status").on('value', function (snapshot) {
+            if (snapshot.val() == 'started') {
                 localStorage['currentGame'] = gameKey;
                 window.location.href = 'mpgame.html';
             }
@@ -225,21 +228,168 @@ var lobby;
             console.log('remove completion', err);
         });
     }
-    function startGame(gameKey) {
-        console.log('startGame');
-        fpdbRef.child("games/" + gameKey).update({ status: 'started game', hasStarted: 'yes' }, function (err) {
-            console.log('start game', err);
+    function startGame(gameKey, gameType) {
+        // TODO : if there are fewer than 3 players or more than 5 players, 
+        // just put a message
+        fpdbRef.child("games/" + gameKey).once('value', function (snapshot) {
+            var game = snapshot.val();
+            if (game.players.length < 3 || game.players.length > 5) {
+                game.textStatus = game.players.length < 3
+                    ? "too few players"
+                    : "too many players";
+                fpdbRef.child("games/" + gameKey).set(game);
+                return;
+            }
+            gamestate.initializePlayer(game.players[0], game.players[0].userName, 'red', 0);
+            gamestate.initializePlayer(game.players[1], game.players[1].userName, 'cornflowerblue', 1);
+            gamestate.initializePlayer(game.players[2], game.players[2].userName, 'green', 2);
+            if (game.players.length >= 4) {
+                gamestate.initializePlayer(game.players[3], game.players[3].userName, 'yellow', 3);
+            }
+            if (game.players.length >= 5) {
+                gamestate.initializePlayer(game.players[4], game.players[4].userName, 'black', 4);
+            }
+            $.getJSON('map.json', function (data) {
+                var allRegions = data;
+                setup(game, allRegions, gameType);
+            });
+            console.log('startGame');
+            fpdbRef.child("games/" + gameKey).update(game, function (err) {
+                console.log('really start game', err);
+            });
         });
+    }
+    /// This routine gets called to really configure everything
+    // TODO : move this to lobby.ts ?
+    function setup(game, allRegions, gameType) {
+        for (var i = 0; i < allRegions.length; i++) {
+            game.deck[i] = gamestate.newCard(allRegions[i].name, allRegions[i].startingUnits);
+        }
+        game.classic = gameType == 'classic';
+        if (game.classic == true) {
+            for (var i_1 = 0; i_1 < allRegions.length; i_1++) {
+                var region = allRegions[i_1];
+                game.regions[region.name].currentUnits = 0;
+            }
+            game.currentPhase = 0;
+            game.currentPlayerIndex = 0;
+            if (game.players.length == 3) {
+                game.unitPool = 35;
+            }
+            if (game.players.length == 4) {
+                game.unitPool = 30;
+            }
+            if (game.players.length == 5) {
+                game.unitPool = 25;
+            }
+        }
+        else {
+            game.currentPhase = -1;
+            game.currentPlayerIndex = -1;
+            game.unitPool = 0;
+            var temp;
+            for (var i = game.deck.length - 1; i > 0; i--) {
+                var index = Math.floor(Math.random() * i);
+                temp = game.deck[i];
+                game.deck[i] = game.deck[index];
+                game.deck[index] = temp;
+            }
+            for (var i = 0; i < game.deck.length; i++) {
+                var card = game.deck[i];
+                var player = game.players[i % game.players.length];
+                game.regions[card.regionName].userName = player.userName;
+                player.totalRegions++;
+            }
+            for (var i = game.deck.length - 1; i > 0; i--) {
+                var index = Math.floor(Math.random() * i);
+                temp = game.deck[i];
+                game.deck[i] = game.deck[index];
+                game.deck[index] = temp;
+            }
+            game.currentPlayerIndex = 0;
+            currentPhase = 0;
+            unitPool == 0;
+            currentPlayerIndex = 0;
+            currentPhase = 1;
+            hasInit = false;
+            unitPool = 3;
+            var totalRegions;
+            totalRegions = 0;
+            for (var i_2 = 0; i_2 < model.allRegions.length; i_2++) {
+                if (gk.getCurrentTeam(model.allRegions[i_2]) == currentPlayer().userName) {
+                    totalRegions++;
+                }
+            }
+            hasAll = true;
+            for (var i_3 = 0; i_3 < continents.length; i_3++) {
+                hasAll = true;
+                for (var j = 0; j < continents[i_3].territories.length; j++) {
+                    for (var k = 0; k < model.allRegions.length; k++) {
+                        if (model.allRegions[k].name == continents[i_3].territories[j]) {
+                            index = k;
+                        }
+                    }
+                    if (gk.getCurrentTeam(model.allRegions[index]) != currentPlayer().userName) {
+                        hasAll = false;
+                    }
+                }
+                if (hasAll == true) {
+                    unitPool += continents[i_3].ownershipPoints;
+                }
+            }
+            if (totalRegions >= 12 && totalRegions <= 14) {
+                unitPool += 1;
+            }
+            if (totalRegions >= 15 && totalRegions <= 17) {
+                unitPool += 2;
+            }
+            if (totalRegions >= 18 && totalRegions <= 20) {
+                unitPool += 3;
+            }
+            if (totalRegions >= 21 && totalRegions <= 23) {
+                unitPool += 4;
+            }
+            if (totalRegions >= 24 && totalRegions <= 26) {
+                unitPool += 5;
+            }
+            if (totalRegions >= 27 && totalRegions <= 29) {
+                unitPool += 6;
+            }
+            if (totalRegions >= 30 && totalRegions <= 32) {
+                unitPool += 7;
+            }
+            if (totalRegions >= 33 && totalRegions <= 35) {
+                unitPool += 8;
+            }
+            if (totalRegions >= 36 && totalRegions <= 39) {
+                unitPool += 9;
+            }
+            if (totalRegions >= 40 && totalRegions <= 42) {
+                unitPool += 10;
+            }
+            if (currentPhase == 3) {
+                $('#undo').addClass('hidden');
+                $('#battleBox').text(currentPlayer().userName + ', move your units');
+            }
+            if (currentPhase == 2 && selectedRegion == null) {
+                $('#battleBox').text(currentPlayer().userName + ' is on the attack!');
+                $('#undo').addClass('hidden');
+            }
+        }
     }
     function createGame(gameName) {
         var game = {
             name: gameName,
-            maxPlayers: 4,
+            maxPlayers: 5,
             status: 'not-started',
             textStatus: 'looking for players.',
-            players: [gamestate.newPlayer(currentUserDisplayName(), 'red')],
+            players: [gamestate.newPlayer(currentUserDisplayName())],
             regions: {},
-            deck: []
+            deck: [],
+            currentPhase: -1,
+            currentPlayerIndex: -1,
+            unitPool: 0,
+            classic: false
         };
         var gameKey = fpdbRef.child('games').push(game, function (err) {
             console.log(err);

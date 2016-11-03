@@ -1,4 +1,3 @@
-// TODO : move all the relevant gamestate out of mpgame and into here
 
 interface Game {
     name: string;
@@ -8,6 +7,10 @@ interface Game {
     players: Player[];
     regions: RegionTeamOwnershipMap;
     deck: Card[];
+    currentPlayerIndex: number;
+    currentPhase: number;
+    unitPool: number;
+    classic: boolean;
 }
 interface Player {
     userName: string;
@@ -15,6 +18,7 @@ interface Player {
     color: string;
     hand: Card[];
     order: number;
+    totalRegions:number;
 }
 
 interface Card {
@@ -32,20 +36,39 @@ interface RegionTeamOwnershipMap {
 
 
 namespace gamestate {
-    export function newPlayer(userName?:string,color?:string): Player {
+    export function newPlayer(userName: string): Player {
         return {
             userName: userName,
             captured: false,
-            color: color,
-            hand:[],
-            order: -1
+            color: null,
+            hand: null,
+            order: -1,
+            totalRegions:0
         };
     }
+    export function initializePlayer(
+        player: Player,
+        userName?: string,
+        color?: string,
+        order?: number): void {
 
-    export function newCard(regionName:string,s:number){
+        if (userName)
+            player.userName = userName;
+        if (color)
+            player.color = color;
+        if (order)
+            player.order = order;
+        else
+            player.order = -1;
+
+        player.captured = false;
+        player.hand = [];
+    };
+
+    export function newCard(regionName: string, s: number) {
         return {
-            regionName:regionName,
-            stars:s
+            regionName: regionName,
+            stars: s
         };
     }
 }

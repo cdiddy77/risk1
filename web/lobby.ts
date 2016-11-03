@@ -126,8 +126,8 @@ namespace lobby {
 
     function beginQueryAvailableGames() {
 
-        if(localStorage['currentGame'])
-            window.location.href='mpgame.html';
+        if (localStorage['currentGame'])
+            window.location.href = 'mpgame.html';
 
         fpdbRef = firebase.database().ref();
         fpdbRef.child('games').orderByChild('status').equalTo("not-started").on('value', snapshot => {
@@ -170,7 +170,10 @@ namespace lobby {
                 abandonGame(ev.target.getAttribute('fbkey'));
             });
             $('.startCmd').click(ev => {
-                startGame(ev.target.getAttribute('fbkey'));
+                startGame(ev.target.getAttribute('fbkey'), 'normal');
+            });
+            $('.startClassicCmd').click(ev => {
+                startGame(ev.target.getAttribute('fbkey'), 'classic');
             });
         });
 
@@ -205,8 +208,8 @@ namespace lobby {
             }
         });
 
-        fpdbRef.child("games/" + gameKey + "/hasStarted").on('value', snapshot => {
-            if (snapshot.val() == 'yes') {
+        fpdbRef.child("games/" + gameKey + "/status").on('value', snapshot => {
+            if (snapshot.val() == 'started') {
                 localStorage['currentGame'] = gameKey;
                 window.location.href = 'mpgame.html';
             }
@@ -242,22 +245,197 @@ namespace lobby {
         });
     }
 
-    function startGame(gameKey: string) {
-        console.log('startGame');
-        fpdbRef.child("games/" + gameKey).update({ status: 'started game', hasStarted: 'yes' }, (err) => {
-            console.log('start game', err);
+    interface PartialGameRegion {
+        name: string;
+        startingUnits: number;
+    }
+
+    function startGame(gameKey: string, gameType: 'normal' | 'classic') {
+        // TODO : if there are fewer than 3 players or more than 5 players, 
+        // just put a message
+        fpdbRef.child("games/" + gameKey).once('value', snapshot => {
+            let game: Game = snapshot.val();
+            if (game.players.length < 3 || game.players.length > 5) {
+                game.textStatus = game.players.length < 3
+                    ? "too few players"
+                    : "too many players";
+
+                fpdbRef.child("games/" + gameKey).set(game);
+                return;
+            }
+            gamestate.initializePlayer(game.players[0],
+                game.players[0].userName,
+                'red', 0);
+            gamestate.initializePlayer(game.players[1],
+                game.players[1].userName,
+                'cornflowerblue', 1);
+            gamestate.initializePlayer(game.players[2],
+                game.players[2].userName,
+                'green', 2);
+            if (game.players.length >= 4) {
+                gamestate.initializePlayer(game.players[3],
+                    game.players[3].userName,
+                    'yellow', 3);
+            }
+            if (game.players.length >= 5) {
+                gamestate.initializePlayer(game.players[4],
+                    game.players[4].userName,
+                    'black', 4);
+            }
+            $.getJSON('map.json', function (data) {
+                let allRegions: PartialGameRegion[] = data;
+                setup(game, allRegions, gameType);
+
+            });
+
+            console.log('startGame');
+            fpdbRef.child("games/" + gameKey).update(game, (err) => {
+                console.log('really start game', err);
+
+            });
         });
+    }
+
+    /// This routine gets called to really configure everything
+    // TODO : move this to lobby.ts ?
+    function setup(game: Game, allRegions: PartialGameRegion[], gameType: 'normal' | 'classic') {
+        for (var i = 0; i < allRegions.length; i++) {
+            game.deck[i] = gamestate.newCard(allRegions[i].name, allRegions[i].startingUnits);
+        }
+        game.classic = gameType == 'classic';
+        if (game.classic == true) {
+            for (let i_1 = 0; i_1 < allRegions.length; i_1++) {
+                let region = allRegions[i_1];
+                game.regions[region.name].currentUnits = 0;
+            }
+            game.currentPhase = 0;
+            game.currentPlayerIndex = 0;
+            if (game.players.length == 3) {
+                game.unitPool = 35;
+            }
+            if (game.players.length == 4) {
+                game.unitPool = 30;
+            }
+            if (game.players.length == 5) {
+                game.unitPool = 25;
+            }
+        } else {
+            game.currentPhase = -1;
+            game.currentPlayerIndex = -1;
+            game.unitPool = 0;
+            var temp;
+            for (var i = game.deck.length - 1; i > 0; i--) {
+                var index = Math.floor(Math.random() * i);
+                temp = game.deck[i];
+                game.deck[i] = game.deck[index];
+                game.deck[index] = temp;
+            }
+            for (var i = 0; i < game.deck.length; i++) {
+                let card = game.deck[i];
+                let player = game.players[i % game.players.length];
+                game.regions[card.regionName].userName = player.userName;
+                player.totalRegions++;
+            }
+            for (var i = game.deck.length - 1; i > 0; i--) {
+                var index = Math.floor(Math.random() * i);
+                temp = game.deck[i];
+                game.deck[i] = game.deck[index];
+                game.deck[index] = temp;
+            }
+            game.currentPlayerIndex = 0;
+            currentPhase = 0;
+            unitPool == 0;
+            currentPlayerIndex = 0;
+            currentPhase = 1;
+
+            hasInit = false;
+
+            unitPool = 3;
+            var totalRegions: number;
+            totalRegions = 0;
+            for (let i = 0; i < model.allRegions.length; i++) {
+                if (gk.getCurrentTeam(model.allRegions[i]) == currentPlayer().userName) {
+                    totalRegions++;
+                }
+
+            }
+
+            hasAll = true;
+            for (let i = 0; i < continents.length; i++) {
+                hasAll = true;
+                for (let j = 0; j < continents[i].territories.length; j++) {
+                    for (let k = 0; k < model.allRegions.length; k++) {
+                        if (model.allRegions[k].name == continents[i].territories[j]) {
+                            index = k;
+
+                        }
+                    }
+                    if (gk.getCurrentTeam(model.allRegions[index]) != currentPlayer().userName) {
+                        hasAll = false;
+
+                    }
+
+                }
+                if (hasAll == true) {
+                    unitPool += continents[i].ownershipPoints;
+
+                }
+            }
+            if (totalRegions >= 12 && totalRegions <= 14) {
+                unitPool += 1;
+            }
+            if (totalRegions >= 15 && totalRegions <= 17) {
+                unitPool += 2;
+            }
+            if (totalRegions >= 18 && totalRegions <= 20) {
+                unitPool += 3;
+            }
+            if (totalRegions >= 21 && totalRegions <= 23) {
+                unitPool += 4;
+            }
+            if (totalRegions >= 24 && totalRegions <= 26) {
+                unitPool += 5;
+            }
+            if (totalRegions >= 27 && totalRegions <= 29) {
+                unitPool += 6;
+            }
+            if (totalRegions >= 30 && totalRegions <= 32) {
+                unitPool += 7;
+            }
+            if (totalRegions >= 33 && totalRegions <= 35) {
+                unitPool += 8;
+            }
+            if (totalRegions >= 36 && totalRegions <= 39) {
+                unitPool += 9;
+            }
+            if (totalRegions >= 40 && totalRegions <= 42) {
+                unitPool += 10;
+            }
+            if (currentPhase == 3) {
+                $('#undo').addClass('hidden');
+                $('#battleBox').text(currentPlayer().userName + ', move your units');
+            }
+
+            if (currentPhase == 2 && selectedRegion == null) {
+                $('#battleBox').text(currentPlayer().userName + ' is on the attack!');
+                $('#undo').addClass('hidden');
+            }
+        }
     }
 
     function createGame(gameName: string) {
         var game: Game = {
             name: gameName,
-            maxPlayers: 4,
-            status:'not-started',
+            maxPlayers: 5,
+            status: 'not-started',
             textStatus: 'looking for players.',
-            players: [gamestate.newPlayer(currentUserDisplayName(),'red')],
+            players: [gamestate.newPlayer(currentUserDisplayName())],
             regions: {},
-            deck:[]
+            deck: [],
+            currentPhase: -1,
+            currentPlayerIndex: -1,
+            unitPool: 0,
+            classic: false
         };
         var gameKey = fpdbRef.child('games').push(game, (err) => {
             console.log(err);
@@ -265,4 +443,5 @@ namespace lobby {
 
         joinGame(gameKey);
     }
+
 }

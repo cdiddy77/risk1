@@ -68,9 +68,9 @@ var mpgame;
     $('#undo').click(function (ev) {
         if (actions.length > 0) {
             gk.changeCurrentUnits(actions[actions.length - 1], -1);
-            unitPool++;
+            gk.game.unitPool++;
             actions.splice(actions.length - 1, 1);
-            $('#battleBox').text(currentPlayer().userName + ', you have ' + unitPool + ' units to spend');
+            $('#battleBox').text(currentPlayer().userName + ', you have ' + gk.game.unitPool + ' units to spend');
             queueRedraw();
         }
         else
@@ -78,7 +78,7 @@ var mpgame;
     });
     var turn = 1;
     canvas.onmousedown = function (ev) {
-        if (currentPhase == 0) {
+        if (gk.game.currentPhase == 0) {
             if (round == 1) {
                 if (model.hoverRegion == null || gk.getCurrentTeam(model.hoverRegion) != null) {
                     $('#warning').removeClass('hidden');
@@ -102,9 +102,9 @@ var mpgame;
                 }
             }
             if (currentPlayer().order == players.length - 1 && turn != 1) {
-                unitPool--;
+                gk.game.unitPool--;
             }
-            if (currentPlayerIndex == players.length - 1) {
+            if (gk.game.currentPlayerIndex == players.length - 1) {
                 if (turn == 42) {
                     round++;
                 }
@@ -113,12 +113,12 @@ var mpgame;
                 turn += 1;
                 nextPlayer();
             }
-            if (unitPool == 0) {
-                currentPhase = 1;
+            if (gk.game.unitPool == 0) {
+                gk.game.currentPhase = 1;
             }
         }
-        else if (currentPhase == 1) {
-            if (unitPool == 0) {
+        else if (gk.game.currentPhase == 1) {
+            if (gk.game.unitPool == 0) {
                 $('#battleBox').text('nothing left to place');
             }
             else if (model.hoverRegion == null) {
@@ -128,16 +128,16 @@ var mpgame;
                 $('#warning').removeClass('hidden');
             }
             else if (gk.getCurrentTeam(model.hoverRegion) == currentPlayer().userName) {
-                unitPool--;
+                gk.game.unitPool--;
                 gk.changeCurrentUnits(model.hoverRegion, 1);
                 actions[actions.length] = model.hoverRegion;
                 $('#warning').addClass('hidden');
             }
-            if (currentPhase == 1) {
-                $('#battleBox').text(currentPlayer().userName + ', you have ' + unitPool + ' units to spend');
+            if (gk.game.currentPhase == 1) {
+                $('#battleBox').text(currentPlayer().userName + ', you have ' + gk.game.unitPool + ' units to spend');
             }
         }
-        else if (currentPhase == 2) {
+        else if (gk.game.currentPhase == 2) {
             if (model.hoverRegion != null) {
                 if (gk.getCurrentTeam(model.hoverRegion) != currentPlayer().userName && selectedRegion == null) {
                     $('#warning').removeClass('hidden');
@@ -148,14 +148,14 @@ var mpgame;
                 }
             }
         }
-        else if (currentPhase == 3) {
+        else if (gk.game.currentPhase == 3) {
             moveClick();
         }
         queueRedraw();
     };
     $('#tradein').addClass('hidden');
     $('#tradein').click(function (ev) {
-        if (currentPhase == 1) {
+        if (gk.game.currentPhase == 1) {
             cardPoints = 0;
             for (var i = 0; i < tradeIns.length; i++) {
                 cardPoints += tradeIns[i].stars;
@@ -172,31 +172,31 @@ var mpgame;
                     }
                 }
                 if (cardPoints == 2) {
-                    unitPool += 2;
+                    gk.game.unitPool += 2;
                 }
                 if (cardPoints == 3) {
-                    unitPool += 4;
+                    gk.game.unitPool += 4;
                 }
                 if (cardPoints == 4) {
-                    unitPool += 7;
+                    gk.game.unitPool += 7;
                 }
                 if (cardPoints == 5) {
-                    unitPool += 10;
+                    gk.game.unitPool += 10;
                 }
                 if (cardPoints == 6) {
-                    unitPool += 13;
+                    gk.game.unitPool += 13;
                 }
                 if (cardPoints == 7) {
-                    unitPool += 17;
+                    gk.game.unitPool += 17;
                 }
                 if (cardPoints == 8) {
-                    unitPool += 21;
+                    gk.game.unitPool += 21;
                 }
                 if (cardPoints == 9) {
-                    unitPool += 25;
+                    gk.game.unitPool += 25;
                 }
                 if (cardPoints >= 10) {
-                    unitPool += 30;
+                    gk.game.unitPool += 30;
                 }
                 tradeIns.splice(0, tradeIns.length);
                 $('#tradein').text('trade in: ');
@@ -205,14 +205,14 @@ var mpgame;
                 }
             }
         }
-        $('#battleBox').text(currentPlayer().userName + ', you have ' + unitPool + ' units to spend');
+        $('#battleBox').text(currentPlayer().userName + ', you have ' + gk.game.unitPool + ' units to spend');
     });
     $('#tradein').mouseover(function (ev) {
         $('#tradein').text('trade in: ');
         for (var i = 0; i < tradeIns.length; i++) {
             $('#tradein').append(tradeIns[i].regionName + ', ');
         }
-        if (currentPhase == 1) {
+        if (gk.game.currentPhase == 1) {
             cardPoints = 0;
             for (var i = 0; i < tradeIns.length; i++) {
                 cardPoints += tradeIns[i].stars;
@@ -328,10 +328,10 @@ var mpgame;
         }
     }
     function currentPlayer() {
-        if (currentPlayerIndex == -1)
+        if (gk.game.currentPlayerIndex == -1)
             return null;
         else
-            return players[currentPlayerIndex];
+            return gk.game.players[gk.game.currentPlayerIndex];
     }
     var attackRegion;
     var defenseRegion;
@@ -506,19 +506,14 @@ var mpgame;
     var index;
     var hasCard = false;
     var tradeIns = [];
-    var players = [];
-    var currentPlayerIndex = -1;
     var model = new GameModel();
     var heldUnits = 0;
     var attackDice = 0;
     var defenseDice = 0;
     var attackRoll = [0, 0, 0];
     var defenseRoll = [0, 0];
-    var currentPhase = -1;
     var attackUnits = 0;
-    var classic = false;
     var round = 1;
-    var unitPool = 0;
     var hasInit = false;
     var hasAll = true;
     var index1;
@@ -536,7 +531,7 @@ var mpgame;
         firebase.auth().onAuthStateChanged(function (authData) {
             console.log("onAuth:" + JSON.stringify(authData));
             if (authData) {
-                determineWhichGame();
+                beginLoadGame();
             }
             else {
                 window.location.href = 'lobby.html';
@@ -559,62 +554,16 @@ var mpgame;
                 doHittest(pt);
             }
         };
-        // TODO : move this ordering code to lobby.html so by the time we get in here, the game is set up and ready to go
-        $('#threePlayers').click(function (ev) {
-            players.length = 3;
-            for (var i = 0; i < 3; i++) {
-                players[i] = gamestate.newPlayer();
-            }
-            players[0].userName = "red";
-            players[1].userName = "cornflowerblue";
-            players[2].userName = "green";
-            players[0].order = 0;
-            players[1].order = 1;
-            players[2].order = 2;
-            queueRedraw();
-            setup();
-        });
-        $('#fourPlayers').click(function (ev) {
-            players.length = 4;
-            for (var i = 0; i < 4; i++) {
-                players[i] = gamestate.newPlayer();
-            }
-            players[0].userName = "red";
-            players[1].userName = "cornflowerblue";
-            players[2].userName = "green";
-            players[3].userName = "yellow";
-            players[0].order = 0;
-            players[1].order = 1;
-            players[2].order = 2;
-            players[3].order = 3;
-            queueRedraw();
-            setup();
-        });
-        $('#fivePlayers').click(function (ev) {
-            players.length = 5;
-            for (var i = 0; i < 5; i++) {
-                players[i] = gamestate.newPlayer();
-            }
-            players[0].userName = "red";
-            players[1].userName = "cornflowerblue";
-            players[2].userName = "green";
-            players[3].userName = "yellow";
-            players[4].userName = "black";
-            players[0].order = 0;
-            players[1].order = 1;
-            players[2].order = 2;
-            players[3].order = 3;
-            players[4].order = 4;
-            queueRedraw();
-            setup();
-        });
-        //how do i make a comment??
     });
     $.getJSON('map.json', function (data) {
         loadRegions(data);
     });
+    var continents;
+    $.getJSON('continents.json', function (data) {
+        continents = data;
+    });
     var gameKey;
-    function determineWhichGame() {
+    function beginLoadGame() {
         gameKey = localStorage['currentGame'];
         if (!gameKey)
             window.location.href = 'lobby.html';
@@ -629,14 +578,10 @@ var mpgame;
     // called whenever the game changes. here you need to
     // update all of the UI
     function onGameChanged() {
+        setupUI();
     }
-    var continents;
-    $.getJSON('continents.json', function (data) {
-        continents = data;
-    });
     /// This routine gets called to really configure everything
-    // TODO : move this to lobby.ts ?
-    function setup() {
+    function setupUI() {
         // TODO : need to make sure we update the firebase with changes we make in this routine
         var foo = document.getElementById('classic');
         $('#span').addClass('hidden');
