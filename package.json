@@ -20,5 +20,8 @@
     "url": "https://github.com/cdiddy77/risk1/issues"
   },
   "homepage": "https://github.com/cdiddy77/risk1#readme",
-  "description": ""
+  "description": "",
+  "devDependencies": {
+    "webpack": "^1.13.3"
+  }
 }

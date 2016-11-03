@@ -111,10 +111,10 @@ namespace mpgame {
                 }
 
             }
-            if (currentPlayer().order == players.length - 1 && turn != 1) {
+            if (currentPlayer().order == gk.game.players.length - 1 && turn != 1) {
                 gk.game.unitPool--;
             }
-            if (gk.game.currentPlayerIndex == players.length - 1) {
+            if (gk.game.currentPlayerIndex == gk.game.players.length - 1) {
                 if (turn == 42) {
                     round++;
                 }
@@ -598,20 +598,13 @@ namespace mpgame {
     // called whenever the game changes. here you need to
     // update all of the UI
     function onGameChanged() {
-        setupUI();
+        if (gk.game.status == 'waiting-setup') {
+            setupUI();
+        }
     }
 
     /// This routine gets called to really configure everything
     function setupUI() {
-        // TODO : need to make sure we update the firebase with changes we make in this routine
-        var foo = document.getElementById('classic');
-        $('#span').addClass('hidden');
-        classic = false;
-        console.log($('#classic').is(':checked'));
-        if ($('#classic').is(':checked') == true) {
-            classic = true;
-        }
-        console.log(classic);
         $('#hand').addClass('hidden');
         $('#attackButton').addClass('hidden');
         $('#controls').addClass('hidden');
@@ -619,45 +612,10 @@ namespace mpgame {
         $('#fourPlayers').addClass('hidden');
         $('#fivePlayers').addClass('hidden');
 
-        for (var i = 0; i < model.allRegions.length; i++) {
-            gk.game.deck[i] = gamestate.newCard(model.allRegions[i].name, model.allRegions[i].startingUnits)
-        }
-        if (classic == true) {
-            for (let i = 0; i < model.allRegions.length; i++) {
-                model.allRegions[i].startingUnits = 0;
-                gk.setCurrentUnits(model.allRegions[i], 0);
-            }
-            currentPhase = 0;
-            currentPlayerIndex = 0;
-            if (players.length == 3) {
-                unitPool = 35;
-            }
-            if (players.length == 4) {
-                unitPool = 30;
-            }
-            if (players.length == 5) {
-                unitPool = 25;
-            }
+        if (gk.game.classic == true) {
             $('#battleBox').text('select your regions');
         }
-        if (classic == false) {
-            var temp: Card;
-            for (var i = gk.game.deck.length - 1; i > 0; i--) {
-                var index = Math.floor(Math.random() * i);
-                temp = gk.game.deck[i];
-                gk.game.deck[i] = gk.game.deck[index];
-                gk.game.deck[index] = temp;
-            }
-            
-            for (var i = 0; i < gk.game.deck.length; i++) {
-                gk.game.deck[i].regionName = players[i % players.length].userName;
-            }
-            for (var i = gk.game.deck.length - 1; i > 0; i--) {
-                var index = Math.floor(Math.random() * i);
-                temp = gk.game.deck[i];
-                gk.game.deck[i] = gk.game.deck[index];
-                gk.game.deck[index] = temp;
-            }
+        if (gk.game.classic == false) {
             nextPlayer();
         }
 
@@ -666,34 +624,40 @@ namespace mpgame {
     function nextPlayer() {
         // TODO : need to make sure we update the firebase at the end of this routine
         console.log('check');
-        console.log(currentPhase);
+        console.log(gk.game.currentPhase);
         $('#tradein').text('trade in: ');
-        if (currentPlayerIndex == -1) {
-            currentPlayerIndex = 0;
+        if (gk.game.currentPlayerIndex == -1) {
+            gk.game.currentPlayerIndex = 0;
         }
-        if (currentPhase == -1) { currentPhase = 0; unitPool == 0; currentPlayerIndex = players.length - 1; }
-        if (currentPhase == 0) {
-            if (currentPlayerIndex == players.length - 1) {
-                currentPlayerIndex = 0;
+        if (gk.game.currentPhase == -1) {
+            gk.game.currentPhase = 0;
+            gk.game.unitPool == 0;
+            gk.game.currentPlayerIndex = gk.game.players.length - 1;
+        }
+        if (gk.game.currentPhase == 0) {
+            if (gk.game.currentPlayerIndex == gk.game.players.length - 1) {
+                gk.game.currentPlayerIndex = 0;
             } else
-                currentPlayerIndex = currentPlayer().order + 1;
-            if (unitPool == 0) {
-                currentPhase = 1;
+                gk.game.currentPlayerIndex = currentPlayer().order + 1;
+            if (gk.game.unitPool == 0) {
+                gk.game.currentPhase = 1;
             }
         }
-        else if (currentPhase == 3) {
+        else if (gk.game.currentPhase == 3) {
 
             if (currentPlayer().captured) {
                 giveCard(currentPlayer());
                 currentPlayer().captured = false;
             }
 
-            currentPhase = 1;
+            gk.game.currentPhase = 1;
 
-            if (currentPlayerIndex == players.length - 1) {
-                currentPlayerIndex = 0;
-            } else currentPlayerIndex = currentPlayer().order + 1;
-        } else currentPhase++;
+            if (gk.game.currentPlayerIndex == gk.game.players.length - 1) {
+                gk.game.currentPlayerIndex = 0;
+            } else
+                gk.game.currentPlayerIndex = currentPlayer().order + 1;
+        } else
+            gk.game.currentPhase++;
         hasInit = false;
         $('#hand').html("<button id='hand' type='button' class='btn btn-primary'>my hand: </button>");
         $('#hand').addClass('hidden');
