@@ -634,16 +634,15 @@ var mpgame;
         }
         else
             gk.game.currentPhase++;
-        hasInit = false;
         $('#hand').html("<button id='hand' type='button' class='btn btn-primary'>my hand: </button>");
         $('#hand').addClass('hidden');
-        if (currentPhase == 1) {
+        if (gk.game.currentPhase == 1) {
             for (var i = 0; i < currentPlayer().hand.length; i++) {
                 $('#hand').append('<button id="' + currentPlayer().hand[i].regionName + '" class="btn btn-primary" onclick="'
                     + (init(gk.game.deck[gk.game.deck.length - 1])) + '">' + currentPlayer().hand[i].regionName + '</button>');
             }
         }
-        if (currentPhase == 1) {
+        if (gk.game.currentPhase == 1) {
             if (currentPlayer().hand.length < 1) {
                 $('#hand').addClass('hidden');
             }
@@ -652,14 +651,7 @@ var mpgame;
             actions.splice(0, actions.length);
             $('#undo').removeClass('hidden');
             if (hasInit == false) {
-                unitPool = 3;
-                var totalRegions;
-                totalRegions = 0;
-                for (var i = 0; i < model.allRegions.length; i++) {
-                    if (gk.getCurrentTeam(model.allRegions[i]) == currentPlayer().userName) {
-                        totalRegions++;
-                    }
-                }
+                gk.game.unitPool = 3;
                 hasAll = true;
                 for (var i = 0; i < continents.length; i++) {
                     hasAll = true;
@@ -674,48 +666,48 @@ var mpgame;
                         }
                     }
                     if (hasAll == true) {
-                        unitPool += continents[i].ownershipPoints;
+                        gk.game.unitPool += continents[i].ownershipPoints;
                     }
                 }
-                if (totalRegions >= 12 && totalRegions <= 14) {
-                    unitPool += 1;
+                if (currentPlayer().totalRegions >= 12 && currentPlayer().totalRegions <= 14) {
+                    gk.game.unitPool += 1;
                 }
-                if (totalRegions >= 15 && totalRegions <= 17) {
-                    unitPool += 2;
+                if (currentPlayer().totalRegions >= 15 && currentPlayer().totalRegions <= 17) {
+                    gk.game.unitPool += 2;
                 }
-                if (totalRegions >= 18 && totalRegions <= 20) {
-                    unitPool += 3;
+                if (currentPlayer().totalRegions >= 18 && currentPlayer().totalRegions <= 20) {
+                    gk.game.unitPool += 3;
                 }
-                if (totalRegions >= 21 && totalRegions <= 23) {
-                    unitPool += 4;
+                if (currentPlayer().totalRegions >= 21 && currentPlayer().totalRegions <= 23) {
+                    gk.game.unitPool += 4;
                 }
-                if (totalRegions >= 24 && totalRegions <= 26) {
-                    unitPool += 5;
+                if (currentPlayer().totalRegions >= 24 && currentPlayer().totalRegions <= 26) {
+                    gk.game.unitPool += 5;
                 }
-                if (totalRegions >= 27 && totalRegions <= 29) {
-                    unitPool += 6;
+                if (currentPlayer().totalRegions >= 27 && currentPlayer().totalRegions <= 29) {
+                    gk.game.unitPool += 6;
                 }
-                if (totalRegions >= 30 && totalRegions <= 32) {
-                    unitPool += 7;
+                if (currentPlayer().totalRegions >= 30 && currentPlayer().totalRegions <= 32) {
+                    gk.game.unitPool += 7;
                 }
-                if (totalRegions >= 33 && totalRegions <= 35) {
-                    unitPool += 8;
+                if (currentPlayer().totalRegions >= 33 && currentPlayer().totalRegions <= 35) {
+                    gk.game.unitPool += 8;
                 }
-                if (totalRegions >= 36 && totalRegions <= 39) {
-                    unitPool += 9;
+                if (currentPlayer().totalRegions >= 36 && currentPlayer().totalRegions <= 39) {
+                    gk.game.unitPool += 9;
                 }
-                if (totalRegions >= 40 && totalRegions <= 42) {
-                    unitPool += 10;
+                if (currentPlayer().totalRegions >= 40 && currentPlayer().totalRegions <= 42) {
+                    gk.game.unitPool += 10;
                 }
                 hasInit = true;
             }
-            $('#battleBox').text(currentPlayer().userName + ', you have ' + unitPool + ' units to spend');
+            $('#battleBox').text(currentPlayer().userName + ', you have ' + gk.game.unitPool + ' units to spend');
         }
-        if (currentPhase == 3) {
+        if (gk.game.currentPhase == 3) {
             $('#undo').addClass('hidden');
             $('#battleBox').text(currentPlayer().userName + ', move your units');
         }
-        if (currentPhase == 2 && selectedRegion == null) {
+        if (gk.game.currentPhase == 2 && selectedRegion == null) {
             $('#battleBox').text(currentPlayer().userName + ' is on the attack!');
             $('#undo').addClass('hidden');
         }
