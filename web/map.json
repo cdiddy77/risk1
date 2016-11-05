@@ -1,7 +1,7 @@
 [
     {
         "adjacent": [
-            "Eastern U.S.",
+            "Eastern US",
             "Alberta",
             "Ontario",
             "Central America"
@@ -43,7 +43,7 @@
                 }
             ]
         },
-        "name": "Western U.S.",
+        "name": "Western US",
         "unitCoords": {
             "x": 172,
             "y": 293
@@ -54,7 +54,7 @@
             "East Canada",
             "Ontario",
             "Central America",
-            "Western U.S."
+            "Western US"
         ],
         "startingUnits": 1,
         "coords": {
@@ -141,7 +141,7 @@
                 }
             ]
         },
-        "name": "Eastern U.S.",
+        "name": "Eastern US",
         "unitCoords": {
             "x": 269,
             "y": 329
@@ -149,7 +149,7 @@
     },
     {
         "adjacent": [
-            "Western U.S.",
+            "Western US",
             "Ontario",
             "Northwest Territory",
             "Alaska"
@@ -190,8 +190,8 @@
             "East Canada",
             "Alberta",
             "Northwest Territory",
-            "Eastern U.S.",
-            "Western U.S.",
+            "Eastern US",
+            "Western US",
             "Greenland"
         ],
         "startingUnits": 2,
@@ -392,7 +392,7 @@
         "adjacent": [
             "Greenland",
             "Ontario",
-            "Eastern U.S."
+            "Eastern US"
         ],
         "startingUnits": 1,
         "coords": {
@@ -3541,8 +3541,8 @@
     {
         "adjacent": [
             "Venezuela",
-            "Western U.S.",
-            "Eastern U.S."
+            "Western US",
+            "Eastern US"
         ],
         "startingUnits": 1,
         "coords": {
